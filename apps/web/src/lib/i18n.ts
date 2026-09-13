@@ -14,12 +14,19 @@ export type Language = (typeof SUPPORTED_LANGUAGES)[number]
 
 const STORAGE_KEY = 'prestameami.language'
 
+/**
+ * Spanish always wins unless the user explicitly picked another language.
+ *
+ * We deliberately do NOT sniff `navigator.language`: this is a product for a
+ * bodega in Lima, and a browser set to en-US (a borrowed laptop, a demo
+ * machine) should not silently flip the whole UI to English.
+ */
 function initialLanguage(): Language {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored !== null && (SUPPORTED_LANGUAGES as readonly string[]).includes(stored)) {
     return stored as Language
   }
-  return navigator.language.startsWith('en') ? 'en' : 'es'
+  return 'es'
 }
 
 void i18n.use(initReactI18next).init({
