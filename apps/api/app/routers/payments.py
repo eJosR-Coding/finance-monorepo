@@ -3,10 +3,23 @@
 from fastapi import APIRouter, status
 
 from app.routers.deps import CurrentUser, SessionDep
-from app.schemas.payment import PaymentCreate, PaymentPreview, PaymentRead, PaymentResult
+from app.schemas.payment import (
+    PaymentCreate,
+    PaymentListItem,
+    PaymentPreview,
+    PaymentRead,
+    PaymentResult,
+)
 from app.services import payments as payments_service
 
 router = APIRouter(prefix="/credits/{credit_id}/payments", tags=["payments"])
+all_payments_router = APIRouter(prefix="/payments", tags=["payments"])
+
+
+@all_payments_router.get("", response_model=list[PaymentListItem], summary="Listar todos los pagos")
+def list_all_payments(session: SessionDep, current_user: CurrentUser) -> list[PaymentListItem]:
+    """Todos los cobros registrados, del mas reciente al mas antiguo."""
+    return payments_service.list_all(session)
 
 
 @router.get("", response_model=list[PaymentRead], summary="Historial de pagos del credito")

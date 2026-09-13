@@ -66,6 +66,7 @@ app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(clients.router, prefix=settings.api_prefix)
 app.include_router(credits.router, prefix=settings.api_prefix)
 app.include_router(payments.router, prefix=settings.api_prefix)
+app.include_router(payments.all_payments_router, prefix=settings.api_prefix)
 app.include_router(dashboard.router, prefix=settings.api_prefix)
 
 
