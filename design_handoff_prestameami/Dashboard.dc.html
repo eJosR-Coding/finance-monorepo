@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/modernist-cdd71636-b830-4535-b191-ebc02481903c/styles.css">
+  <script src="_ds/modernist-cdd71636-b830-4535-b191-ebc02481903c/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; }
+    a { color: var(--color-accent); text-decoration: none; }
+    a:hover { color: var(--color-accent-700); }
+    .navlink { display:flex;align-items:center;gap:11px;padding:9px 12px;text-decoration:none;font-size:13.5px;font-weight:600;color:var(--color-neutral-400);border-left:2px solid transparent; }
+    .navlink:hover { color:#fff; background:color-mix(in srgb, #fff 6%, transparent); }
+    .navlink.active { color:#fff; background:color-mix(in srgb, var(--color-accent) 20%, transparent); border-left-color:var(--color-accent); }
+    .glassbtn { background:color-mix(in srgb, var(--color-surface) 55%, transparent); backdrop-filter:blur(6px); border:1px solid var(--color-divider); }
+  </style>
+</helmet>
+<div style="display:flex;min-height:100vh;background:var(--color-bg);">
+  <aside style="width:230px;flex:none;background:var(--color-neutral-900);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;">
+    <div style="padding:22px 22px 20px;display:flex;align-items:center;gap:9px;">
+      <span style="width:22px;height:22px;background:var(--color-accent);flex:none;"></span>
+      <span style="font-family:var(--font-heading);font-weight:800;font-size:16.5px;color:#fff;">Prestameami<span style="color:var(--color-accent-400);">.pe</span></span>
+    </div>
+    <nav style="flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:2px;">
+      <a href="./Dashboard.dc.html" class="navlink active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</a>
+      <a href="./Clientes.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clientes</a>
+      <a href="./CreditoDetalle.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>Créditos</a>
+      <a href="./RegistrarPago.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>Pagos</a>
+      <a href="./Morosos.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Morosos</a>
+      <a href="./Configuracion.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Configuración</a>
+    </nav>
+    <div style="padding:14px 16px;border-top:1px solid color-mix(in srgb, #fff 12%, transparent);display:flex;align-items:center;gap:10px;">
+      <div style="width:32px;height:32px;background:var(--color-accent-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex:none;">CM</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Carlos Mendoza</div>
+        <div style="font-size:11px;color:var(--color-neutral-500);">Administrador</div>
+      </div>
+      <button type="button" aria-label="Cerrar sesión" onClick="{{ openLogout }}" style="background:transparent;border:0;color:var(--color-neutral-500);cursor:pointer;padding:6px;display:flex;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+    <header style="height:64px;flex:none;display:flex;align-items:center;gap:16px;padding:0 32px;border-bottom:2px solid var(--color-divider);position:sticky;top:0;background:var(--color-bg);z-index:5;">
+      <span style="font-size:14px;font-weight:700;">Dashboard</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+        <button type="button" class="btn btn-icon glassbtn" aria-label="Notificaciones"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+        <div style="width:1px;height:22px;background:var(--color-divider);"></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;background:var(--color-neutral-800);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;">CM</div>
+          <span style="font-size:13px;font-weight:600;">Carlos Mendoza</span>
+        </div>
+      </div>
+    </header>
+
+    <main style="flex:1;padding:32px 40px 72px;max-width:1180px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;">
+        <div>
+          <h1 style="font-size:26px;margin:0 0 6px;">Dashboard</h1>
+          <p style="font-size:14px;opacity:0.62;margin:0;">Resumen de tus créditos y cobros</p>
+        </div>
+        <a href="./NuevoCredito.dc.html" class="btn btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Nuevo crédito</a>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(200px,1fr));gap:16px;margin-bottom:32px;">
+        <div class="card">
+          <div class="card-kicker" style="white-space:nowrap;">Créditos activos</div>
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:24px;white-space:nowrap;">18</div>
+          <div class="card-meta" style="color:color-mix(in srgb, var(--color-text) 45%, transparent);white-space:nowrap;">+2 esta semana</div>
+        </div>
+        <div class="card">
+          <div class="card-kicker" style="white-space:nowrap;">Por cobrar</div>
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:24px;white-space:nowrap;">S/ 1,284.50</div>
+          <div class="card-meta" style="color:color-mix(in srgb, var(--color-text) 45%, transparent);white-space:nowrap;">18 cuotas pendientes</div>
+        </div>
+        <div class="card">
+          <div class="card-kicker" style="white-space:nowrap;">Cobros de hoy</div>
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:24px;white-space:nowrap;">S/ 185.00</div>
+          <div class="card-meta" style="color:color-mix(in srgb, var(--color-text) 45%, transparent);white-space:nowrap;">3 pagos registrados</div>
+        </div>
+        <div class="card">
+          <div class="card-kicker" style="white-space:nowrap;">Clientes bloqueados</div>
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:24px;color:var(--color-accent-700);white-space:nowrap;">3</div>
+          <div class="card-meta" style="color:color-mix(in srgb, var(--color-text) 45%, transparent);white-space:nowrap;">Por deuda vencida</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:32px;align-items:start;">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h2 style="font-size:18px;margin:0;">Próximos cobros</h2>
+            <a href="./Morosos.dc.html" style="font-size:13px;">Ver todos</a>
+          </div>
+          <table class="table" style="margin-bottom:36px;">
+            <thead><tr><th>Cliente</th><th>Cuota</th><th>Vence</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>María Torres</td><td>S/ 72.40</td><td>Hoy</td><td><span class="tag" style="background:oklch(94% 0.07 80);color:oklch(38% 0.1 55);">Pendiente</span></td><td><a href="./ClienteDetalle.dc.html">Ver</a></td></tr>
+              <tr><td>Luis Herrera</td><td>S/ 55.10</td><td>14/09/2026</td><td><span class="tag" style="background:oklch(94% 0.07 80);color:oklch(38% 0.1 55);">Pendiente</span></td><td><a href="./ClienteDetalle.dc.html">Ver</a></td></tr>
+              <tr><td>Andrea Flores</td><td>S/ 40.00</td><td>Vencida</td><td><span class="tag tag-accent">Vencido</span></td><td><a href="./RegistrarPago.dc.html">Cobrar</a></td></tr>
+            </tbody>
+          </table>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h2 style="font-size:18px;margin:0;">Últimos créditos</h2>
+            <a href="./CreditoDetalle.dc.html" style="font-size:13px;">Ver todos</a>
+          </div>
+          <table class="table">
+            <thead><tr><th>Cliente</th><th>Capital</th><th>Plazo</th><th>Cuotas</th><th>Total</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td>María Torres</td><td>S/ 140.00</td><td>14 días</td><td>2</td><td>S/ 141.38</td><td><span class="tag" style="background:oklch(94% 0.07 80);color:oklch(38% 0.1 55);">Vigente</span></td></tr>
+              <tr><td>Luis Herrera</td><td>S/ 100.00</td><td>7 días</td><td>1</td><td>S/ 102.30</td><td><span class="tag" style="background:oklch(93% 0.05 145);color:oklch(35% 0.1 145);">Pagado</span></td></tr>
+              <tr><td>Andrea Flores</td><td>S/ 120.00</td><td>14 días</td><td>2</td><td>S/ 126.40</td><td><span class="tag tag-accent">Vencido</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <h2 style="font-size:18px;margin:0 0 -2px;">Requiere atención</h2>
+          <div class="card elev-sm">
+            <div class="card-kicker" style="color:var(--color-accent-700);">3 cuotas vencidas</div>
+            <p class="card-body" style="opacity:1;">Hay S/ 164.80 pendientes de regularización.</p>
+            <a href="./Morosos.dc.html" class="btn btn-secondary" style="align-self:flex-start;">Ver morosos</a>
+          </div>
+          <div class="card elev-sm">
+            <div class="card-kicker">5 cobros esta semana</div>
+            <p class="card-body" style="opacity:1;">Total esperado: S/ 322.50</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <sc-if value="{{ showLogout }}">
+    <div class="dialog-backdrop">
+      <div class="dialog" role="dialog" aria-modal="true">
+        <div class="dialog-title">¿Cerrar sesión?</div>
+        <div class="dialog-body">Volverás a la pantalla de inicio de sesión.</div>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" onClick="{{ closeLogout }}">Cancelar</button>
+          <a href="./Login.dc.html" class="btn btn-primary">Cerrar sesión</a>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { showLogout: false };
+  renderVals() {
+    return {
+      showLogout: this.state.showLogout,
+      openLogout: () => this.setState({ showLogout: true }),
+      closeLogout: () => this.setState({ showLogout: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

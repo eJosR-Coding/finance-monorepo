@@ -1,0 +1,30 @@
+# ── Python / API ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# SQLite: the schema is code, the data is not. Keep the folder, drop the db.
+apps/api/data/*.db
+apps/api/data/*.db-journal
+apps/api/data/*.db-wal
+apps/api/data/*.db-shm
+
+# ── Node / Web ───────────────────────────────────────────────
+node_modules/
+dist/
+.vite/
+*.local
+
+# ── Entorno ──────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Editor / OS ──────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+*.swp
