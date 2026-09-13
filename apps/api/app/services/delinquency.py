@@ -28,11 +28,14 @@ def sync(session: Session, today: date | None = None) -> None:
     """Recompute installment, credit and client states. Does not commit."""
     today = today or clock.today()
 
+    # populate_existing is the important bit: without it, objects already sitting
+    # in the identity map keep their stale collections and a client that just went
+    # overdue would never get flagged.
     credits = list(
         session.scalars(
-            select(Credit).options(
-                selectinload(Credit.installments).selectinload(Installment.payments)
-            )
+            select(Credit)
+            .options(selectinload(Credit.installments).selectinload(Installment.payments))
+            .execution_options(populate_existing=True)
         )
     )
 
@@ -60,8 +63,19 @@ def sync(session: Session, today: date | None = None) -> None:
         else:
             credit.status = CreditStatus.active
 
+    # Flush before the next query: it re-reads Credit rows through
+    # selectinload(Client.credits), and populate_existing would otherwise
+    # overwrite the statuses we just set with the stale DB values.
+    session.flush()
+
     # A client stays blocked while at least one credit is overdue.
-    clients = list(session.scalars(select(Client).options(selectinload(Client.credits))))
+    clients = list(
+        session.scalars(
+            select(Client)
+            .options(selectinload(Client.credits))
+            .execution_options(populate_existing=True)
+        )
+    )
     for client in clients:
         blocked = any(credit.status == CreditStatus.overdue for credit in client.credits)
         client.credit_status = (
