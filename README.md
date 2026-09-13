@@ -93,6 +93,7 @@ La contrasenia se guarda con hash bcrypt, nunca en texto plano.
 | `uv run pytest -v` | Igual, mostrando el nombre de cada test. |
 | `uv run pytest -k caso-1` | Solo el caso de prueba 1 del anexo. |
 | `uv run python scripts/generate_docs.py` | Regenera los anexos C, E y F desde el codigo. |
+| `uv run python scripts/generate_excel.py` | Regenera el libro de Excel de verificacion. |
 | `uv run ruff check .` | Linter. |
 
 La base de datos vive en `apps/api/data/prestameami.db` y no se versiona: se
@@ -172,6 +173,7 @@ frontend nunca recalcula una cuota: pide el cronograma a la API y lo formatea.
 | [docs/user-flow.md](docs/user-flow.md) | Recorrido del usuario y mapa de rutas. |
 | [docs/test-cases.md](docs/test-cases.md) | Anexo C — cronogramas de los casos de prueba. |
 | [docs/validation.md](docs/validation.md) | Anexo F — evidencias de validacion. |
+| [docs/evidence/prestameami-cronogramas.xlsx](docs/evidence/prestameami-cronogramas.xlsx) | Cronogramas en Excel con formulas vivas, para contrastar el calculo. |
 
 Los anexos C, E y F **se generan desde el codigo**:
 
@@ -266,6 +268,12 @@ de tasa cero, los limites de monto y plazo, los periodos de gracia, el interes
 moratorio, el bloqueo y desbloqueo de clientes morosos, y el flujo completo de
 la demo a traves de HTTP. Incluye un barrido de 100 combinaciones de monto,
 numero de cuotas y tasa que verifica que el saldo final siempre cierre en cero.
+
+Ademas hay una bateria de pruebas de estres (`tests/test_stress.py`) con los
+limites exactos, los pagos parciales encadenados, la mora dia a dia y la
+idempotencia de cada endpoint, y un contraste contra Excel
+(`tests/test_excel.py`) que le pide a LibreOffice recalcular el libro y compara
+sus resultados con los del motor, celda por celda.
 
 ---
 
