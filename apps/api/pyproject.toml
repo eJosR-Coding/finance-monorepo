@@ -30,3 +30,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# This script embeds Markdown tables; wrapping them would break the output.
+"scripts/generate_docs.py" = ["E501"]
