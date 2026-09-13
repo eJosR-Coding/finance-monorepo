@@ -20,6 +20,7 @@ import { StatusTag } from '@/components/Tag'
 import { ClientPicker } from '@/components/ClientPicker'
 import { useToast } from '@/features/ui/ToastContext'
 import { useClient, useConfig, useInvalidateAll } from '@/hooks/queries'
+import { useSingleSubmit } from '@/hooks/useSingleSubmit'
 import { translateError } from '@/lib/errors'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { creditsApi } from '@/services/api'
@@ -46,6 +47,7 @@ export function NewCreditPage() {
   const invalidateAll = useInvalidateAll()
   const [searchParams] = useSearchParams()
   const { data: config } = useConfig()
+  const submitOnce = useSingleSubmit()
 
   const presetClientId = Number(searchParams.get('clientId') ?? '0')
   const { data: presetClient } = useClient(presetClientId)
@@ -183,7 +185,7 @@ export function NewCreditPage() {
       setApiError(t('newCredit.selectClient'))
       return
     }
-    createMutation.mutate(terms)
+    submitOnce(() => createMutation.mutateAsync(terms))
   }
 
   return (

@@ -18,6 +18,7 @@ import { Segmented } from '@/components/Segmented'
 import { CardsSkeleton, ErrorState, InlineError } from '@/components/States'
 import { useToast } from '@/features/ui/ToastContext'
 import { useCredit, useInvalidateAll } from '@/hooks/queries'
+import { useSingleSubmit } from '@/hooks/useSingleSubmit'
 import { translateError } from '@/lib/errors'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { paymentsApi } from '@/services/api'
@@ -35,6 +36,7 @@ export function RegisterPaymentPage() {
   const navigate = useNavigate()
   const { notify } = useToast()
   const invalidateAll = useInvalidateAll()
+  const submitOnce = useSingleSubmit()
   const { creditId } = useParams()
   const [searchParams] = useSearchParams()
   const id = Number(creditId)
@@ -319,7 +321,7 @@ export function RegisterPaymentPage() {
         confirmLabel={t('payment.submit')}
         cancelLabel={t('common.cancel')}
         busy={createMutation.isPending}
-        onConfirm={() => createMutation.mutate()}
+        onConfirm={() => submitOnce(() => createMutation.mutateAsync())}
         onCancel={() => setConfirmOpen(false)}
       />
     </div>

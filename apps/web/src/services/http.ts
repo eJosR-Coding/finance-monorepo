@@ -35,14 +35,27 @@ type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE'
 
 async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
   const token = getToken()
-  const response = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers: {
-      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
-    },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-  })
+
+  let response: Response
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers: {
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    })
+  } catch {
+    // fetch REJECTS when the server is unreachable, it does not return a
+    // response, so the !response.ok path below never sees this case. Without
+    // this catch the user would read a raw "Failed to fetch" in English.
+    throw new ApiError(0, {
+      code: 'NETWORK_ERROR',
+      message: 'No se pudo contactar al servidor. Revisa que la API este levantada.',
+      details: {},
+    })
+  }
 
   if (response.status === 204) return undefined as T
 
