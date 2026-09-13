@@ -1,37 +1,37 @@
 """Enumeraciones del dominio. Los valores son exactamente los del ERD."""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ClientCreditStatus(str, Enum):
+class ClientCreditStatus(StrEnum):
     enabled = "enabled"
     blocked = "blocked"
 
 
-class RateType(str, Enum):
+class RateType(StrEnum):
     TNA = "TNA"
     TEA = "TEA"
 
 
-class GraceType(str, Enum):
+class GraceType(StrEnum):
     none = "none"
     partial = "partial"
     total = "total"
 
 
-class CreditStatus(str, Enum):
+class CreditStatus(StrEnum):
     active = "active"
     paid = "paid"
     overdue = "overdue"
 
 
-class InstallmentStatus(str, Enum):
+class InstallmentStatus(StrEnum):
     pending = "pending"
     paid = "paid"
     overdue = "overdue"
 
 
-class PaymentMethod(str, Enum):
+class PaymentMethod(StrEnum):
     cash = "cash"
     yape = "yape"
     plin = "plin"

@@ -37,7 +37,8 @@ class Settings(BaseSettings):
     min_term_days: int = 1
     days_per_year: int = 360  # anio financiero academico
     money_decimals: int = 2
-    rate_decimals: int = 7
+    rate_decimals: int = 9  # fraccion decimal; equivale a 7 decimales en %
+    rate_percent_decimals: int = 7
 
     # TEA sugerida en el formulario de nuevo credito (el usuario puede cambiarla).
     default_annual_rate: Decimal = Decimal("40.00")

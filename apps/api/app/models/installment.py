@@ -4,7 +4,8 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, Enum as SAEnum, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import Date, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.enums import InstallmentStatus
@@ -19,7 +20,9 @@ if TYPE_CHECKING:
 class Installment(Base):
     __tablename__ = "installments"
     __table_args__ = (
-        UniqueConstraint("credit_id", "installment_number", name="uq_installment_number_per_credit"),
+        UniqueConstraint(
+            "credit_id", "installment_number", name="uq_installment_number_per_credit"
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
