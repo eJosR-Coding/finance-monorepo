@@ -1,4 +1,4 @@
-"""INSTALLMENT — una fila del cronograma de amortizacion (metodo frances)."""
+"""INSTALLMENT - one row of the French amortization schedule."""
 
 from datetime import date
 from decimal import Decimal

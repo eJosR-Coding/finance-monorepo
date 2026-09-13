@@ -1,4 +1,4 @@
-"""PAYMENT — un cobro registrado y como se repartio entre mora, interes y capital."""
+"""PAYMENT - a collected amount and how it split across late fee, interest, principal."""
 
 from datetime import date, datetime
 from decimal import Decimal
@@ -30,12 +30,12 @@ class Payment(Base):
     payment_date: Mapped[date] = mapped_column(Date)
     amount_received: Mapped[Decimal] = mapped_column(MoneyColumn)
 
-    # Reparto academico obligatorio: mora -> interes compensatorio -> capital.
+    # Mandatory academic waterfall: late fee -> compensatory interest -> principal.
     late_interest_amount: Mapped[Decimal] = mapped_column(MoneyColumn)
     compensatory_interest_amount: Mapped[Decimal] = mapped_column(MoneyColumn)
     principal_amount: Mapped[Decimal] = mapped_column(MoneyColumn)
 
-    remaining_balance: Mapped[Decimal] = mapped_column(MoneyColumn)  # saldo del credito despues
+    remaining_balance: Mapped[Decimal] = mapped_column(MoneyColumn)  # credit balance after
 
     payment_method: Mapped[PaymentMethod] = mapped_column(
         SAEnum(PaymentMethod, native_enum=False, validate_strings=True, length=10)

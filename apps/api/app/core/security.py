@@ -1,6 +1,6 @@
-"""Autenticacion local simple: hash bcrypt + token JWT firmado.
+"""Dead-simple local auth: bcrypt hash + signed JWT.
 
-Sin OAuth, sin proveedores externos. Es una app de un solo administrador.
+No OAuth, no external providers. It's a single-admin app, that's the whole cast.
 """
 
 from datetime import UTC, datetime, timedelta
@@ -19,7 +19,7 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
     try:
         return bcrypt.checkpw(plain_password.encode("utf-8"), password_hash.encode("utf-8"))
     except ValueError:
-        # Hash corrupto o con formato invalido: no revienta, simplemente no valida.
+        # Corrupted or malformed hash: don't blow up, just fail the check.
         return False
 
 
@@ -32,7 +32,7 @@ def create_access_token(subject: str) -> str:
 
 
 def decode_access_token(token: str) -> str | None:
-    """Devuelve el `sub` del token, o None si vencio / esta mal firmado."""
+    """Return the token's `sub`, or None if it expired or the signature is off."""
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
     except jwt.PyJWTError:

@@ -1,4 +1,4 @@
-"""Motor de base de datos, sesiones y Base declarativa."""
+"""Database engine, sessions and the declarative Base."""
 
 from collections.abc import Generator
 
@@ -9,19 +9,19 @@ from app.core.config import DATA_DIR, settings
 
 
 class Base(DeclarativeBase):
-    """Base declarativa de todos los modelos."""
+    """Declarative base shared by every model."""
 
 
 engine = create_engine(
     settings.database_url,
-    connect_args={"check_same_thread": False},  # FastAPI usa varios hilos
+    connect_args={"check_same_thread": False},  # FastAPI hops across threads
     echo=False,
 )
 
 
 @event.listens_for(Engine, "connect")
 def _enable_sqlite_foreign_keys(dbapi_connection, connection_record) -> None:  # noqa: ANN001
-    """SQLite ignora las FK salvo que se activen en cada conexion."""
+    """SQLite ignores foreign keys unless you turn them on per connection."""
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
@@ -31,15 +31,15 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 
 
 def create_all() -> None:
-    """Crea el archivo SQLite y las tablas si no existen."""
+    """Create the SQLite file and the tables if they aren't there yet."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    # Import con efecto secundario: registra los modelos en Base.metadata.
+    # Side-effecting import: this is what registers models on Base.metadata.
     from app import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 
 
 def get_session() -> Generator[Session, None, None]:
-    """Dependencia de FastAPI: una sesion por request."""
+    """FastAPI dependency: one session per request."""
     with SessionLocal() as session:
         yield session

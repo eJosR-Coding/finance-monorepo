@@ -1,4 +1,4 @@
-"""Modelos ORM. El import de todos aca es lo que puebla `Base.metadata`."""
+"""ORM models. Importing them all here is what populates `Base.metadata`."""
 
 from app.models.client import Client
 from app.models.credit import Credit

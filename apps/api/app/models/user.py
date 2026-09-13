@@ -1,4 +1,4 @@
-"""USER — el administrador de la bodega. No representa a los clientes."""
+"""USER - the bodega owner/admin. Never represents a borrower."""
 
 from datetime import datetime
 

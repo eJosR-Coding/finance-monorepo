@@ -1,14 +1,14 @@
-"""Errores de reglas de negocio.
+"""Business-rule errors.
 
-Cada error lleva un `code` estable (para que el frontend lo traduzca con i18n)
-y un `message` en espaniol que sirve de fallback y sale tal cual en Swagger.
+Each error carries a stable `code` (so the frontend can translate it via i18n)
+plus a Spanish `message` that works as a fallback and shows up in Swagger.
 """
 
 from typing import Any
 
 
 class BusinessRuleError(Exception):
-    """Regla de negocio incumplida. El router la convierte en HTTP 422."""
+    """A business rule was broken. The router turns this into HTTP 422."""
 
     status_code = 422
 
@@ -20,18 +20,18 @@ class BusinessRuleError(Exception):
 
 
 class NotFoundError(BusinessRuleError):
-    """El recurso pedido no existe. HTTP 404."""
+    """Requested resource does not exist. HTTP 404."""
 
     status_code = 404
 
 
 class ConflictError(BusinessRuleError):
-    """Choca con el estado actual del recurso. HTTP 409."""
+    """Conflicts with the resource's current state. HTTP 409."""
 
     status_code = 409
 
 
 class AuthError(BusinessRuleError):
-    """Credenciales invalidas o sesion vencida. HTTP 401."""
+    """Bad credentials or an expired session. HTTP 401."""
 
     status_code = 401
