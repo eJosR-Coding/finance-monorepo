@@ -39,6 +39,14 @@ class PaymentRead(BaseModel):
     created_at: datetime
 
 
+class PaymentListItem(PaymentRead):
+    """A payment plus the context the global list needs to be readable."""
+
+    credit_code: str
+    client_id: int
+    client_name: str
+
+
 class PaymentAllocation(BaseModel):
     """How much of the payment hit each component, installment by installment."""
 

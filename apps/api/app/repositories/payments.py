@@ -8,6 +8,16 @@ from sqlalchemy.orm import Session, selectinload
 from app.models import Credit, Payment
 
 
+def list_all(session: Session) -> list[Payment]:
+    return list(
+        session.scalars(
+            select(Payment)
+            .options(selectinload(Payment.credit).selectinload(Credit.client))
+            .order_by(Payment.payment_date.desc(), Payment.id.desc())
+        )
+    )
+
+
 def list_by_credit(session: Session, credit_id: int) -> list[Payment]:
     return list(
         session.scalars(

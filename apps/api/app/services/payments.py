@@ -18,9 +18,11 @@ from app.core.errors import BusinessRuleError, ConflictError, NotFoundError
 from app.core.money import ZERO_MONEY, money
 from app.models import Credit, Installment, Payment
 from app.repositories import credits as credits_repo
+from app.repositories import payments as payments_repo
 from app.schemas.payment import (
     PaymentAllocation,
     PaymentCreate,
+    PaymentListItem,
     PaymentPreview,
     PaymentRead,
     PaymentResult,
@@ -250,6 +252,19 @@ def register(
         allocations=[_to_allocation(s) for s in slices],
         payments=[PaymentRead.model_validate(p) for p in created],
     )
+
+
+def list_all(session: Session) -> list[PaymentListItem]:
+    """Every payment in the shop, newest first, with client and credit context."""
+    return [
+        PaymentListItem(
+            **PaymentRead.model_validate(payment).model_dump(),
+            credit_code=payment.credit.code,
+            client_id=payment.credit.client_id,
+            client_name=payment.credit.client.full_name,
+        )
+        for payment in payments_repo.list_all(session)
+    ]
 
 
 def list_for_credit(session: Session, credit_id: int) -> list[PaymentRead]:
