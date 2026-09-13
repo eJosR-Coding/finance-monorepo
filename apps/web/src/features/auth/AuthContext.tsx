@@ -4,12 +4,15 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react'
 
 import { authApi } from '@/services/api'
-import { getToken, setToken } from '@/services/http'
+import { ApiError, getToken, setToken } from '@/services/http'
 import type { User } from '@/types/api'
 
 interface AuthValue {
   user: User | null
   isLoading: boolean
+  /** Set when the session could not be checked because the API was unreachable. */
+  sessionError: string | null
+  retrySession: () => void
   login: (email: string, password: string) => Promise<void>
   logout: () => void
 }
@@ -19,6 +22,8 @@ const AuthContext = createContext<AuthValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [sessionError, setSessionError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     // A token in localStorage is only a hint; the API decides if it's still good.
@@ -26,27 +31,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
       return
     }
+    setIsLoading(true)
+    setSessionError(null)
     authApi
       .me()
-      .then(setUser)
-      .catch(() => setToken(null))
+      .then((current) => {
+        setUser(current)
+        setSessionError(null)
+      })
+      .catch((error: unknown) => {
+        const unreachable = error instanceof ApiError && error.code === 'NETWORK_ERROR'
+        if (unreachable) {
+          // Don't torch a valid session over a network blip: keep the token so a
+          // retry works once the API is back, and say what actually happened.
+          setSessionError(error.message)
+          return
+        }
+        setToken(null)
+      })
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [attempt])
+
+  const retrySession = useCallback(() => setAttempt((value) => value + 1), [])
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await authApi.login(email, password)
     setToken(response.access_token)
     setUser(response.user)
+    setSessionError(null)
   }, [])
 
   const logout = useCallback(() => {
     setToken(null)
     setUser(null)
+    setSessionError(null)
   }, [])
 
   const value = useMemo<AuthValue>(
-    () => ({ user, isLoading, login, logout }),
-    [user, isLoading, login, logout],
+    () => ({ user, isLoading, sessionError, retrySession, login, logout }),
+    [user, isLoading, sessionError, retrySession, login, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
