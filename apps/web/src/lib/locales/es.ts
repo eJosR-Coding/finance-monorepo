@@ -435,7 +435,13 @@ export const es = {
     INSTALLMENT_NOT_FOUND: 'La cuota indicada no existe o ya esta pagada.',
     PAYMENT_NOT_POSITIVE: 'El monto del pago debe ser mayor a 0.',
     PAYMENT_BEFORE_CREDIT: 'La fecha del pago no puede ser anterior a la del credito.',
+    DUPLICATE_PAYMENT: 'Ya registraste un pago identico hace {{seconds_ago}} segundos.',
+    DUPLICATE_CREDIT: 'Acabas de otorgar un credito identico ({{credit_code}}) hace {{seconds_ago}} segundos.',
     PAYMENT_EXCEEDS_DEBT: 'El monto excede la deuda pendiente. El maximo a cobrar es S/ {{max_amount}}.',
+  },
+  duplicate: {
+    title: '¿Registrarlo de todas formas?',
+    confirm: 'Si, registrar igual',
   },
   validation: {
     required: 'Este campo es obligatorio.',

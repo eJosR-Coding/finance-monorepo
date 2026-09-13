@@ -7,12 +7,13 @@ The waterfall is fixed by the assignment and non-negotiable:
 """
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
 from app.core import clock
+from app.core.config import settings
 from app.core.enums import PaymentMethod
 from app.core.errors import BusinessRuleError, ConflictError, NotFoundError
 from app.core.money import ZERO_MONEY, money
@@ -51,6 +52,33 @@ def _late_interest_due(installment: Installment, payment_date: date) -> Decimal:
     accrued = finance.late_interest(outstanding, days)
     already_charged = balances.late_interest_paid(installment)
     return max(money(accrued - already_charged), ZERO_MONEY)
+
+
+def _recent_duplicate(credit: Credit, payload: PaymentCreate, amount: Decimal, when: date):
+    """Find a payment batch identical to this one inside the resubmit window.
+
+    A single register() can write several Payment rows (money cascading into
+    later installments), so we compare the SUM of the rows written recently with
+    the same date and method against the amount being requested now.
+
+    It's a heuristic, not a cryptographic idempotency key: two genuinely
+    different payments that land in the same window and happen to add up to the
+    same figure would trip it. That's why `allow_duplicate` exists - the caller
+    can insist, and nothing is silently lost either way.
+    """
+    cutoff = clock.now() - timedelta(seconds=settings.duplicate_window_seconds)
+    recent = [
+        payment
+        for payment in credit.payments
+        if payment.created_at >= cutoff
+        and payment.payment_date == when
+        and payment.payment_method == (payload.payment_method or PaymentMethod.cash)
+    ]
+    if not recent:
+        return None
+    if money(sum((p.amount_received for p in recent), ZERO_MONEY)) != amount:
+        return None
+    return max(recent, key=lambda p: p.created_at)
 
 
 def _targets(credit: Credit, installment_id: int | None) -> list[Installment]:
@@ -194,6 +222,19 @@ def register(
         targets = _targets(credit, payload.installment_id)
         if not targets:
             raise ConflictError("CREDIT_ALREADY_PAID", "Este credito ya esta cancelado.")
+
+        if not payload.allow_duplicate:
+            twin = _recent_duplicate(credit, payload, amount, payment_date)
+            if twin is not None:
+                seconds = int((clock.now() - twin.created_at).total_seconds())
+                raise ConflictError(
+                    "DUPLICATE_PAYMENT",
+                    f"Ya registraste un pago identico de S/ {amount:.2f} hace "
+                    f"{seconds} segundos. Si el cliente pago dos veces, confirma "
+                    f"para registrarlo igual.",
+                    seconds_ago=seconds,
+                    amount=str(amount),
+                )
 
         slices, unapplied = _allocate(credit, amount, payment_date, payload.installment_id)
         if unapplied > ZERO_MONEY:

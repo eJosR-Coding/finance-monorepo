@@ -52,6 +52,14 @@ class Settings(BaseSettings):
     # How many overdue installments it takes to block a client.
     overdue_installments_to_block: int = 1
 
+    # Accidental-resubmit window. An identical write inside this many seconds is
+    # refused unless the caller insists explicitly.
+    #
+    # Kept deliberately tight: a double click or a retry lands within
+    # milliseconds, while a human collecting the same amount twice takes minutes.
+    # A wider window would start flagging legitimate repeat collections.
+    duplicate_window_seconds: int = 15
+
     # ── CORS ────────────────────────────────────────────────────────────────
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 

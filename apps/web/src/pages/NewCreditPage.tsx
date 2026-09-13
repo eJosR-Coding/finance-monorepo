@@ -21,7 +21,7 @@ import { ClientPicker } from '@/components/ClientPicker'
 import { useToast } from '@/features/ui/ToastContext'
 import { useClient, useConfig, useInvalidateAll } from '@/hooks/queries'
 import { useSingleSubmit } from '@/hooks/useSingleSubmit'
-import { translateError } from '@/lib/errors'
+import { errorCode, translateError } from '@/lib/errors'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { creditsApi } from '@/services/api'
 import type { ClientListItem, CreditTerms, GraceType, Simulation } from '@/types/api'
@@ -68,6 +68,8 @@ export function NewCreditPage() {
   const [simulation, setSimulation] = useState<Simulation | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  // The API refused an accidental resubmit; the user can still insist.
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
 
   // Arriving from a client's page preselects them.
   useEffect(() => {
@@ -170,6 +172,10 @@ export function NewCreditPage() {
     },
     onError: (caught) => {
       setConfirmOpen(false)
+      if (errorCode(caught) === 'DUPLICATE_CREDIT') {
+        setDuplicateWarning(translateError(caught, t))
+        return
+      }
       setApiError(translateError(caught, t))
     },
   })
@@ -498,6 +504,21 @@ export function NewCreditPage() {
         busy={createMutation.isPending}
         onConfirm={onConfirm}
         onCancel={() => setConfirmOpen(false)}
+      />
+
+      <Dialog
+        open={duplicateWarning !== null}
+        title={t('duplicate.title')}
+        body={duplicateWarning ?? ''}
+        confirmLabel={t('duplicate.confirm')}
+        cancelLabel={t('common.cancel')}
+        busy={createMutation.isPending}
+        onConfirm={() => {
+          setDuplicateWarning(null)
+          if (terms === null) return
+          submitOnce(() => createMutation.mutateAsync({ ...terms, allow_duplicate: true }))
+        }}
+        onCancel={() => setDuplicateWarning(null)}
       />
     </>
   )

@@ -19,7 +19,7 @@ import { CardsSkeleton, ErrorState, InlineError } from '@/components/States'
 import { useToast } from '@/features/ui/ToastContext'
 import { useCredit, useInvalidateAll } from '@/hooks/queries'
 import { useSingleSubmit } from '@/hooks/useSingleSubmit'
-import { translateError } from '@/lib/errors'
+import { errorCode, translateError } from '@/lib/errors'
 import { formatDate, formatMoney, todayIso } from '@/lib/format'
 import { paymentsApi } from '@/services/api'
 import type { PaymentMethod, PaymentPreview } from '@/types/api'
@@ -50,6 +50,8 @@ export function RegisterPaymentPage() {
   const [preview, setPreview] = useState<PaymentPreview | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  // The API refused an accidental resubmit; the user can still insist.
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
 
   // Target installment: the one asked for in the URL, else the oldest unpaid.
   const targetInstallment = useMemo(() => {
@@ -94,13 +96,14 @@ export function RegisterPaymentPage() {
   }, [amount, date, targetInstallment?.id])
 
   const createMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (allowDuplicate: boolean) =>
       paymentsApi.create(id, {
         amount_received: amount,
         payment_method: method,
         payment_date: date,
         installment_id: targetInstallment?.id ?? null,
         notes: notes.trim() === '' ? null : notes.trim(),
+        allow_duplicate: allowDuplicate,
       }),
     onSuccess: () => {
       invalidateAll()
@@ -109,6 +112,10 @@ export function RegisterPaymentPage() {
     },
     onError: (caught) => {
       setConfirmOpen(false)
+      if (errorCode(caught) === 'DUPLICATE_PAYMENT') {
+        setDuplicateWarning(translateError(caught, t))
+        return
+      }
       setApiError(translateError(caught, t))
     },
   })
@@ -321,8 +328,22 @@ export function RegisterPaymentPage() {
         confirmLabel={t('payment.submit')}
         cancelLabel={t('common.cancel')}
         busy={createMutation.isPending}
-        onConfirm={() => submitOnce(() => createMutation.mutateAsync())}
+        onConfirm={() => submitOnce(() => createMutation.mutateAsync(false))}
         onCancel={() => setConfirmOpen(false)}
+      />
+
+      <Dialog
+        open={duplicateWarning !== null}
+        title={t('duplicate.title')}
+        body={duplicateWarning ?? ''}
+        confirmLabel={t('duplicate.confirm')}
+        cancelLabel={t('common.cancel')}
+        busy={createMutation.isPending}
+        onConfirm={() => {
+          setDuplicateWarning(null)
+          submitOnce(() => createMutation.mutateAsync(true))
+        }}
+        onCancel={() => setDuplicateWarning(null)}
       />
     </div>
   )

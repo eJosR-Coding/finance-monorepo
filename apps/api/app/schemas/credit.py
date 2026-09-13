@@ -27,6 +27,18 @@ class CreditTerms(BaseModel):
     grace_days: int = Field(default=0, ge=0)
 
 
+class CreditCreateRequest(CreditTerms):
+    """Granting a credit. Carries the duplicate override; simulating does not."""
+
+    allow_duplicate: bool = Field(
+        default=False,
+        description=(
+            "Confirma a proposito un credito identico a uno reciente. "
+            "Sin esto, un reenvio accidental se rechaza."
+        ),
+    )
+
+
 class SimulationRequest(CreditTerms):
     """Client is optional when simulating - you may be shopping terms first."""
 
