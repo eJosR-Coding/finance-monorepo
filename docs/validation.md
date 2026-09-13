@@ -45,7 +45,7 @@ curl -s -X POST http://localhost:8000/api/credits/simulate \
 
 ```
 $ uv run pytest -q
-242 passed, 2 warnings in 41.44s
+244 passed, 2 warnings in 42.04s
 ```
 
 Los tests cubren la conversion de tasas, el metodo frances, la tasa cero, los limites de monto y plazo, los periodos de gracia, el interes moratorio, el bloqueo de clientes morosos y el flujo completo de la demo por HTTP.

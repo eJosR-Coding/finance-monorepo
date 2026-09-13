@@ -773,3 +773,56 @@ def test_actualizar_al_cliente_dos_veces_da_el_mismo_resultado(
 
     assert first["phone"] == second["phone"] == "999 888 777"
     assert auth_client.get("/api/clients").json()["total"] == 1
+
+
+def test_cobrar_dos_cuotas_seguidas_no_es_un_duplicado(
+    auth_client: TestClient, client_id: int
+) -> None:
+    """Caso real de bodega: cobrar la cuota 1 y enseguida la 2, igual monto y medio.
+
+    La UI siempre indica a que cuota apunta, asi que el sistema distingue esto
+    de un reenvio accidental, que apuntaria a la misma cuota.
+    """
+    credit = _credit(auth_client, client_id)
+    detail = auth_client.get(f"/api/credits/{credit['id']}").json()
+    first, second = detail["installments"][0], detail["installments"][1]
+
+    base = {
+        "amount_received": "70.69",
+        "payment_date": START.isoformat(),
+        "payment_method": "cash",
+    }
+    one = auth_client.post(
+        f"/api/credits/{credit['id']}/payments", json=base | {"installment_id": first["id"]}
+    )
+    two = auth_client.post(
+        f"/api/credits/{credit['id']}/payments", json=base | {"installment_id": second["id"]}
+    )
+
+    assert one.status_code == 201
+    assert two.status_code == 201, two.text
+    assert len(auth_client.get(f"/api/credits/{credit['id']}/payments").json()) == 2
+    assert auth_client.get(f"/api/credits/{credit['id']}").json()["status"] == "paid"
+
+
+def test_reenviar_el_pago_de_la_misma_cuota_si_es_duplicado(
+    auth_client: TestClient, client_id: int
+) -> None:
+    """Mismo monto, mismo medio y MISMA cuota: eso es un reenvio."""
+    credit = _credit(auth_client, client_id)
+    detail = auth_client.get(f"/api/credits/{credit['id']}").json()
+    first = detail["installments"][0]
+
+    payload = {
+        "amount_received": "30.00",
+        "payment_date": START.isoformat(),
+        "payment_method": "cash",
+        "installment_id": first["id"],
+    }
+    first_send = auth_client.post(f"/api/credits/{credit['id']}/payments", json=payload)
+    assert first_send.status_code == 201
+    second = auth_client.post(f"/api/credits/{credit['id']}/payments", json=payload)
+
+    assert second.status_code == 409
+    assert second.json()["code"] == "DUPLICATE_PAYMENT"
+    assert len(auth_client.get(f"/api/credits/{credit['id']}/payments").json()) == 1

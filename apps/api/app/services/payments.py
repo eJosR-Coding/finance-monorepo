@@ -54,17 +54,30 @@ def _late_interest_due(installment: Installment, payment_date: date) -> Decimal:
     return max(money(accrued - already_charged), ZERO_MONEY)
 
 
-def _recent_duplicate(credit: Credit, payload: PaymentCreate, amount: Decimal, when: date):
+def _recent_duplicate(
+    credit: Credit,
+    payload: PaymentCreate,
+    amount: Decimal,
+    when: date,
+    target: Installment,
+):
     """Find a payment batch identical to this one inside the resubmit window.
 
     A single register() can write several Payment rows (money cascading into
     later installments), so we compare the SUM of the rows written recently with
     the same date and method against the amount being requested now.
 
-    It's a heuristic, not a cryptographic idempotency key: two genuinely
-    different payments that land in the same window and happen to add up to the
-    same figure would trip it. That's why `allow_duplicate` exists - the caller
-    can insist, and nothing is silently lost either way.
+    When the caller names the installment (the UI always does), we also compare
+    it. Collecting installment 1 and then installment 2 back to back, same
+    amount, same method, is a perfectly normal afternoon in a bodega and used to
+    trip the guard; a genuine resubmit aims at the very same installment.
+
+    When no target is named we stay conservative and flag on amount + date +
+    method alone, because there is nothing left to tell the two apart.
+
+    Either way it's a heuristic, not a cryptographic idempotency key. That's
+    what `allow_duplicate` is for: the caller can insist, and nothing is
+    silently lost.
     """
     cutoff = clock.now() - timedelta(seconds=settings.duplicate_window_seconds)
     recent = [
@@ -78,7 +91,12 @@ def _recent_duplicate(credit: Credit, payload: PaymentCreate, amount: Decimal, w
         return None
     if money(sum((p.amount_received for p in recent), ZERO_MONEY)) != amount:
         return None
-    return max(recent, key=lambda p: p.created_at)
+    if payload.installment_id is not None:
+        # The earliest row of that batch is where the previous payment started.
+        started_at = min(recent, key=lambda p: p.id)
+        if started_at.installment_id != target.id:
+            return None
+    return max(recent, key=lambda p: p.id)
 
 
 def _targets(credit: Credit, installment_id: int | None) -> list[Installment]:
@@ -224,7 +242,7 @@ def register(
             raise ConflictError("CREDIT_ALREADY_PAID", "Este credito ya esta cancelado.")
 
         if not payload.allow_duplicate:
-            twin = _recent_duplicate(credit, payload, amount, payment_date)
+            twin = _recent_duplicate(credit, payload, amount, payment_date, targets[0])
             if twin is not None:
                 seconds = int((clock.now() - twin.created_at).total_seconds())
                 raise ConflictError(
