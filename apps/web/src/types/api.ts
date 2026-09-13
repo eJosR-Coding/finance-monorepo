@@ -90,6 +90,8 @@ export interface CreditTerms {
   payment_frequency_days: number
   grace_type: GraceType
   grace_days: number
+  /** Confirms on purpose a credit identical to a recent one. */
+  allow_duplicate?: boolean
 }
 
 export type SimulationPayload = Omit<CreditTerms, 'client_id'> & { client_id: number | null }
@@ -218,6 +220,8 @@ export interface PaymentPayload {
   payment_date?: string | null
   installment_id?: number | null
   notes?: string | null
+  /** Confirms on purpose a payment identical to a recent one. */
+  allow_duplicate?: boolean
 }
 
 export type PaymentOutcome = 'exact' | 'partial' | 'surplus'

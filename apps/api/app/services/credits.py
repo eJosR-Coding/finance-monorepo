@@ -1,13 +1,13 @@
 """Credit use cases: simulate, grant and query."""
 
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy.orm import Session
 
 from app.core import clock
 from app.core.config import settings
 from app.core.enums import ClientCreditStatus, CreditStatus, InstallmentStatus
-from app.core.errors import BusinessRuleError, NotFoundError
+from app.core.errors import BusinessRuleError, ConflictError, NotFoundError
 from app.models import Client, Credit, Installment
 from app.repositories import clients as clients_repo
 from app.repositories import credits as credits_repo
@@ -92,6 +92,25 @@ def assert_client_can_borrow(client: Client) -> None:
         )
 
 
+def _recent_duplicate(client: Client, payload: CreditTerms) -> Credit | None:
+    """Spot a credit identical to one just granted, inside the resubmit window."""
+    cutoff = clock.now() - timedelta(seconds=settings.duplicate_window_seconds)
+    for credit in client.credits:
+        if credit.created_at < cutoff:
+            continue
+        same = (
+            credit.amount == payload.amount
+            and credit.start_date == payload.start_date
+            and credit.term_days == payload.term_days
+            and credit.payment_frequency_days == payload.payment_frequency_days
+            and credit.rate_type == payload.rate_type
+            and credit.annual_rate == payload.annual_rate
+        )
+        if same:
+            return credit
+    return None
+
+
 def create(session: Session, payload: CreditTerms, today: date | None = None) -> Credit:
     """Grant a credit. All or nothing: credit + installments in one transaction."""
     today = today or clock.today()
@@ -103,6 +122,20 @@ def create(session: Session, payload: CreditTerms, today: date | None = None) ->
         if client is None:
             raise NotFoundError("CLIENT_NOT_FOUND", "El cliente indicado no existe.")
         assert_client_can_borrow(client)
+
+        if not getattr(payload, "allow_duplicate", False):
+            twin = _recent_duplicate(client, payload)
+            if twin is not None:
+                seconds = int((clock.now() - twin.created_at).total_seconds())
+                raise ConflictError(
+                    "DUPLICATE_CREDIT",
+                    f"Acabas de otorgar un credito identico ({twin.code}) hace "
+                    f"{seconds} segundos. Si de verdad son dos creditos, confirma "
+                    f"para registrarlo igual.",
+                    seconds_ago=seconds,
+                    credit_id=twin.id,
+                    credit_code=twin.code,
+                )
 
         schedule = finance.build_schedule(
             amount=payload.amount,

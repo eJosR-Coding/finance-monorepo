@@ -433,8 +433,14 @@ export const en: Catalog = {
     INSTALLMENT_NOT_FOUND: 'That installment does not exist or is already paid.',
     PAYMENT_NOT_POSITIVE: 'The payment amount must be greater than 0.',
     PAYMENT_BEFORE_CREDIT: 'The payment date cannot be earlier than the credit start date.',
+    DUPLICATE_PAYMENT: 'You already recorded an identical payment {{seconds_ago}} seconds ago.',
+    DUPLICATE_CREDIT: 'You just granted an identical credit ({{credit_code}}) {{seconds_ago}} seconds ago.',
     PAYMENT_EXCEEDS_DEBT:
       'The amount exceeds the outstanding debt. The most you can collect is S/ {{max_amount}}.',
+  },
+  duplicate: {
+    title: 'Record it anyway?',
+    confirm: 'Yes, record it',
   },
   validation: {
     required: 'This field is required.',

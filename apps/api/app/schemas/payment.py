@@ -20,6 +20,13 @@ class PaymentCreate(BaseModel):
         description="Cuota a cobrar. Si se omite, se aplica a la cuota pendiente mas antigua.",
     )
     notes: str | None = Field(default=None, max_length=500)
+    allow_duplicate: bool = Field(
+        default=False,
+        description=(
+            "Confirma a proposito un pago identico a uno reciente. "
+            "Sin esto, un reenvio accidental se rechaza."
+        ),
+    )
 
 
 class PaymentRead(BaseModel):

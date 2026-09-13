@@ -274,7 +274,13 @@ def test_la_suma_de_los_pagos_iguala_el_total_a_pagar(
         chunk = min(Decimal("15.00"), pending)
         response = auth_client.post(
             f"/api/credits/{credit_id}/payments",
-            json={"amount_received": str(chunk), "payment_date": START.isoformat()},
+            json={
+                "amount_received": str(chunk),
+                "payment_date": START.isoformat(),
+                # Abonos iguales uno tras otro en milisegundos: para el guarda de
+                # duplicados esto es un reenvio, asi que se confirma a proposito.
+                "allow_duplicate": True,
+            },
         )
         assert response.status_code == 201, response.text
         collected += chunk
@@ -628,3 +634,142 @@ def test_dni_duplicado_no_crea_un_segundo_cliente(
     }
     assert auth_client.post("/api/clients", json=payload).status_code == 409
     assert auth_client.get("/api/clients").json()["total"] == before
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# 8. Idempotencia y reenvios accidentales
+# ══════════════════════════════════════════════════════════════════════════
+
+
+def test_reenviar_el_mismo_credito_no_crea_un_duplicado(
+    auth_client: TestClient, client_id: int
+) -> None:
+    first = auth_client.post("/api/credits", json=_terms(client_id))
+    second = auth_client.post("/api/credits", json=_terms(client_id))
+
+    assert first.status_code == 201
+    assert second.status_code == 409
+    assert second.json()["code"] == "DUPLICATE_CREDIT"
+    assert second.json()["details"]["credit_code"] == "CR-0001"
+    assert auth_client.get("/api/credits").json()["total"] == 1
+
+
+def test_se_puede_otorgar_un_credito_identico_confirmando(
+    auth_client: TestClient, client_id: int
+) -> None:
+    """El bodeguero manda: si de verdad son dos creditos, se registran."""
+    auth_client.post("/api/credits", json=_terms(client_id))
+    second = auth_client.post("/api/credits", json=_terms(client_id, allow_duplicate=True))
+
+    assert second.status_code == 201
+    assert auth_client.get("/api/credits").json()["total"] == 2
+
+
+def test_condiciones_distintas_no_cuentan_como_duplicado(
+    auth_client: TestClient, client_id: int
+) -> None:
+    auth_client.post("/api/credits", json=_terms(client_id))
+    other = auth_client.post("/api/credits", json=_terms(client_id, amount="100.00"))
+
+    assert other.status_code == 201
+    assert auth_client.get("/api/credits").json()["total"] == 2
+
+
+def test_reenviar_el_mismo_pago_no_cobra_dos_veces(
+    auth_client: TestClient, client_id: int
+) -> None:
+    """El bug caro: sin esta guarda el credito quedaba pagado sin recibir la plata."""
+    credit = _credit(auth_client, client_id)
+    payment = {
+        "amount_received": "70.69",
+        "payment_date": START.isoformat(),
+        "payment_method": "cash",
+    }
+
+    first = auth_client.post(f"/api/credits/{credit['id']}/payments", json=payment)
+    second = auth_client.post(f"/api/credits/{credit['id']}/payments", json=payment)
+
+    assert first.status_code == 201
+    assert second.status_code == 409
+    assert second.json()["code"] == "DUPLICATE_PAYMENT"
+
+    payments = auth_client.get(f"/api/credits/{credit['id']}/payments").json()
+    assert len(payments) == 1
+
+    detail = auth_client.get(f"/api/credits/{credit['id']}").json()
+    assert detail["outstanding_balance"] == "70.69"
+    assert detail["status"] == "active"
+    assert detail["installments"][1]["status"] == "pending"
+
+
+def test_se_puede_registrar_un_pago_identico_confirmando(
+    auth_client: TestClient, client_id: int
+) -> None:
+    """Un cliente si puede pagar dos veces el mismo monto el mismo dia."""
+    credit = _credit(auth_client, client_id)
+    payment = {
+        "amount_received": "70.69",
+        "payment_date": START.isoformat(),
+        "payment_method": "cash",
+    }
+
+    auth_client.post(f"/api/credits/{credit['id']}/payments", json=payment)
+    second = auth_client.post(
+        f"/api/credits/{credit['id']}/payments", json=payment | {"allow_duplicate": True}
+    )
+
+    assert second.status_code == 201
+    assert len(auth_client.get(f"/api/credits/{credit['id']}/payments").json()) == 2
+    detail = auth_client.get(f"/api/credits/{credit['id']}").json()
+    assert detail["status"] == "paid"
+
+
+def test_montos_distintos_no_cuentan_como_pago_duplicado(
+    auth_client: TestClient, client_id: int
+) -> None:
+    credit = _credit(auth_client, client_id)
+    base = {"payment_date": START.isoformat(), "payment_method": "cash"}
+
+    assert (
+        auth_client.post(
+            f"/api/credits/{credit['id']}/payments", json=base | {"amount_received": "20.00"}
+        ).status_code
+        == 201
+    )
+    assert (
+        auth_client.post(
+            f"/api/credits/{credit['id']}/payments", json=base | {"amount_received": "30.00"}
+        ).status_code
+        == 201
+    )
+    assert len(auth_client.get(f"/api/credits/{credit['id']}/payments").json()) == 2
+
+
+def test_las_lecturas_y_la_simulacion_son_idempotentes(
+    auth_client: TestClient, client_id: int
+) -> None:
+    """GET, simulate y preview no pueden dejar rastro por mucho que se repitan."""
+    credit = _credit(auth_client, client_id)
+
+    for _ in range(3):
+        assert auth_client.get(f"/api/credits/{credit['id']}").json() == auth_client.get(
+            f"/api/credits/{credit['id']}"
+        ).json()
+        auth_client.post("/api/credits/simulate", json=_terms(client_id))
+        auth_client.post(
+            f"/api/credits/{credit['id']}/payments/preview", json={"amount_received": "70.69"}
+        )
+
+    assert auth_client.get("/api/credits").json()["total"] == 1
+    assert auth_client.get(f"/api/credits/{credit['id']}/payments").json() == []
+
+
+def test_actualizar_al_cliente_dos_veces_da_el_mismo_resultado(
+    auth_client: TestClient, client_id: int
+) -> None:
+    payload = {"phone": "999 888 777"}
+    first = auth_client.patch(f"/api/clients/{client_id}", json=payload).json()
+    second = auth_client.patch(f"/api/clients/{client_id}", json=payload).json()
+
+    assert first["phone"] == second["phone"] == "999 888 777"
+    assert auth_client.get("/api/clients").json()["total"] == 1

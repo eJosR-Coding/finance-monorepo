@@ -7,9 +7,9 @@ from fastapi import APIRouter, Query, status
 from app.core.enums import CreditStatus
 from app.routers.deps import CurrentUser, SessionDep
 from app.schemas.credit import (
+    CreditCreateRequest,
     CreditDetail,
     CreditListResponse,
-    CreditTerms,
     SimulationRequest,
     SimulationResponse,
 )
@@ -35,7 +35,7 @@ def simulate(payload: SimulationRequest, current_user: CurrentUser) -> Simulatio
     summary="Otorgar un credito",
 )
 def create_credit(
-    payload: CreditTerms, session: SessionDep, current_user: CurrentUser
+    payload: CreditCreateRequest, session: SessionDep, current_user: CurrentUser
 ) -> CreditDetail:
     """Valida al cliente, calcula el cronograma y persiste credito y cuotas.
 
