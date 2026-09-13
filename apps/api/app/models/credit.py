@@ -4,7 +4,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, DateTime, Enum as SAEnum, ForeignKey, Integer
+from sqlalchemy import Date, DateTime, ForeignKey, Integer
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import clock

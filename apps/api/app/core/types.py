@@ -5,7 +5,7 @@ pierde exactitud. Guardamos los Decimal como TEXTO y los devolvemos como
 Decimal, asi el saldo final es exactamente 0.00 y no 1.4e-17.
 """
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from sqlalchemy import Dialect, String
@@ -36,7 +36,7 @@ class DecimalText(TypeDecorator[Decimal]):
 
 #: Importes en soles (2 decimales).
 MoneyColumn = DecimalText(2)
-#: Tasas efectivas (7 decimales), segun requisito academico.
-RateColumn = DecimalText(7)
+#: Tasas efectivas como fraccion decimal, 9 decimales == 7 decimales en %.
+RateColumn = DecimalText(9)
 #: Tasas anuales expresadas en porcentaje (ej. 40.00), 2 decimales.
 PercentColumn = DecimalText(2)
