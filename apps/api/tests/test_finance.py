@@ -1,4 +1,8 @@
-"""Tests del motor financiero: conversion de tasas, metodo frances y mora."""
+"""Financial engine tests: rate conversion, French method and late interest.
+
+Test names stay in Spanish on purpose - the pytest output goes straight into
+the academic report (Anexo F), so the professor reads them as evidence.
+"""
 
 from datetime import date
 from decimal import Decimal
@@ -25,7 +29,7 @@ def _schedule(case: AcademicCase) -> finance.Schedule:
     )
 
 
-# ── Casos academicos obligatorios (Anexo C) ────────────────────────────────
+# ── Mandatory academic cases (Anexo C) ─────────────────────────────────────
 
 
 @pytest.mark.parametrize("case", ACADEMIC_CASES, ids=lambda c: c.key)
@@ -51,7 +55,7 @@ def test_caso_academico_reproduce_los_valores_esperados(case: AcademicCase) -> N
 
 @pytest.mark.parametrize("case", ACADEMIC_CASES, ids=lambda c: c.key)
 def test_caso_academico_cuadra_capital_mas_intereses(case: AcademicCase) -> None:
-    """Total a pagar == capital + interes total. Sin centavos perdidos."""
+    """Total payable == principal + total interest. No cents lost in the sauce."""
     schedule = _schedule(case)
     assert schedule.total_payment == schedule.amount + schedule.total_interest
 
@@ -63,16 +67,16 @@ def test_caso_academico_amortizacion_suma_el_capital(case: AcademicCase) -> None
     assert amortized == schedule.amount
 
 
-# ── Conversion de tasas ────────────────────────────────────────────────────
+# ── Rate conversion ────────────────────────────────────────────────────────
 
 
 def test_tea_a_tasa_periodica_usa_base_360() -> None:
-    """TEA 40 % a 7 dias: (1 + 0.40)^(7/360) - 1 = 0.006563965."""
+    """TEA 40 % over 7 days: (1 + 0.40)^(7/360) - 1 = 0.006563965."""
     assert finance.periodic_rate(RateType.TEA, Decimal("40.00"), 7) == Decimal("0.006563965")
 
 
 def test_tna_es_proporcional_no_capitaliza() -> None:
-    """TNA 36 % a 30 dias: 0.36 * 30/360 = 0.03 exacto."""
+    """TNA 36 % over 30 days: 0.36 * 30/360 = exactly 0.03."""
     assert finance.periodic_rate(RateType.TNA, Decimal("36.00"), 30) == Decimal("0.030000000")
 
 
@@ -95,7 +99,7 @@ def test_tcea_equivale_a_la_tea_cuando_no_hay_comisiones() -> None:
     assert schedule.tcea == Decimal("40.00")
 
 
-# ── Tasa cero ──────────────────────────────────────────────────────────────
+# ── Zero rate ──────────────────────────────────────────────────────────────
 
 
 def test_tasa_cero_reparte_el_capital_en_partes_iguales() -> None:
@@ -111,7 +115,7 @@ def test_tasa_cero_reparte_el_capital_en_partes_iguales() -> None:
     assert schedule.final_balance == Decimal("0.00")
 
 
-# ── Saldo final exactamente cero ───────────────────────────────────────────
+# ── Final balance must be exactly zero ─────────────────────────────────────
 
 
 @pytest.mark.parametrize("amount", ["1.00", "33.33", "99.99", "140.00", "200.00"])
@@ -120,7 +124,7 @@ def test_tasa_cero_reparte_el_capital_en_partes_iguales() -> None:
 def test_el_saldo_final_siempre_cierra_en_cero(
     amount: str, installments: int, annual_rate: str
 ) -> None:
-    """El residuo del redondeo lo absorbe la ultima cuota, pase lo que pase."""
+    """The last installment absorbs the rounding residue, no matter the inputs."""
     schedule = finance.build_schedule(
         amount=Decimal(amount), rate_type=RateType.TEA, annual_rate=Decimal(annual_rate),
         start_date=START, term_days=14, installments_count=installments,
@@ -131,7 +135,7 @@ def test_el_saldo_final_siempre_cierra_en_cero(
     assert schedule.total_payment == Decimal(amount) + schedule.total_interest
 
 
-# ── Limites del producto ───────────────────────────────────────────────────
+# ── Product limits ─────────────────────────────────────────────────────────
 
 
 def test_monto_mayor_al_maximo_es_rechazado() -> None:
@@ -164,7 +168,7 @@ def test_plazo_mayor_al_maximo_es_rechazado() -> None:
 
 
 def test_el_cronograma_no_puede_pasarse_del_plazo_pactado() -> None:
-    """3 cuotas cada 7 dias = 21 dias, pero el plazo es de 14."""
+    """3 installments every 7 days = 21 days, but the term is 14."""
     with pytest.raises(BusinessRuleError) as exc:
         finance.build_schedule(
             amount=Decimal("100.00"), rate_type=RateType.TEA, annual_rate=Decimal("40.00"),
@@ -182,7 +186,7 @@ def test_numero_de_cuotas_invalido_es_rechazado() -> None:
     assert exc.value.code == "INSTALLMENTS_INVALID"
 
 
-# ── Fechas de vencimiento ──────────────────────────────────────────────────
+# ── Due dates ──────────────────────────────────────────────────────────────
 
 
 def test_las_fechas_de_vencimiento_siguen_la_frecuencia() -> None:
@@ -194,7 +198,7 @@ def test_las_fechas_de_vencimiento_siguen_la_frecuencia() -> None:
     assert [row.due_date for row in schedule.rows] == [date(2026, 9, 19), date(2026, 9, 26)]
 
 
-# ── Periodos de gracia ─────────────────────────────────────────────────────
+# ── Grace periods ──────────────────────────────────────────────────────────
 
 
 def test_gracia_parcial_agrega_una_cuota_de_solo_interes() -> None:
@@ -232,7 +236,7 @@ def test_gracia_incoherente_es_rechazada() -> None:
     assert exc.value.code == "GRACE_INVALID"
 
 
-# ── Interes moratorio ──────────────────────────────────────────────────────
+# ── Late interest ──────────────────────────────────────────────────────────
 
 
 def test_sin_dias_de_atraso_no_hay_mora() -> None:
@@ -247,5 +251,5 @@ def test_la_mora_crece_con_los_dias_de_atraso() -> None:
 
 
 def test_mora_de_un_mes_equivale_a_la_tem_configurada() -> None:
-    """30 dias de atraso sobre S/ 100.00 con TEM 2 % = S/ 2.00."""
+    """30 days late on S/ 100.00 at a 2 % monthly rate = S/ 2.00 flat."""
     assert finance.late_interest(Decimal("100.00"), 30) == Decimal("2.00")

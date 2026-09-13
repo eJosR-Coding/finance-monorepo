@@ -1,12 +1,12 @@
-"""Casos de prueba academicos (Anexo C y Anexo F).
+"""Academic test cases (Anexo C and Anexo F).
 
-Fuente unica de verdad: los tests verifican que el motor reproduzca estos
-numeros, y el generador de documentacion arma las tablas a partir de aca. Si
-un valor cambia, cambia en un solo archivo.
+Single source of truth: the tests assert the engine reproduces these numbers and
+the docs generator builds its tables from here. Change a value once, it changes
+everywhere - no duplicated tables drifting apart.
 
-Los valores `expected_*` fueron calculados a mano con las formulas del
-enunciado (conversion TEA base 360 + metodo frances) y verificados contra la
-implementacion.
+The `expected_*` values were worked out by hand with the formulas from the
+assignment (TEA conversion on a 360 base + French method) and then checked
+against the implementation.
 """
 
 from dataclasses import dataclass
@@ -90,7 +90,7 @@ CASE_2 = AcademicCase(
     expected_rows=(
         ExpectedRow(1, Decimal("120.00"), Decimal("0.79"), Decimal("59.80"),
                     Decimal("60.59"), Decimal("60.20")),
-        # La ultima cuota absorbe el residuo del redondeo: 60.60 y no 60.59.
+        # Last installment eats the rounding residue: 60.60, not 60.59.
         ExpectedRow(2, Decimal("60.20"), Decimal("0.40"), Decimal("60.20"),
                     Decimal("60.60"), Decimal("0.00")),
     ),

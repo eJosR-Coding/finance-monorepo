@@ -1,14 +1,13 @@
-"""Motor financiero: conversion de tasas, metodo frances y mora.
+"""Financial engine: rate conversion, French method and late interest.
 
-Modulo puro: no sabe nada de la base de datos ni de FastAPI. Recibe numeros y
-fechas, devuelve un cronograma. Es el unico lugar del proyecto donde se
-calculan formulas financieras — el frontend nunca las repite.
+Pure module: knows nothing about the database or FastAPI. Numbers and dates in,
+a schedule out. This is the ONLY place in the project where financial formulas
+are computed - the frontend never re-derives them.
 
-Convenciones:
-  * Anio financiero de 360 dias.
-  * Tasas como fraccion decimal con 9 decimales (== 7 decimales en porcentaje).
-  * Importes con Decimal de 2 decimales; se redondea al cierre de cada periodo,
-    nunca antes.
+Conventions:
+  * 360-day financial year.
+  * Rates as a decimal fraction with 9 decimals (== 7 decimals as a percentage).
+  * Amounts as 2-decimal Decimals, rounded at each period close, never earlier.
 """
 
 from dataclasses import dataclass
@@ -20,24 +19,24 @@ from app.core.enums import GraceType, RateType
 from app.core.errors import BusinessRuleError
 from app.core.money import ZERO_MONEY, money, percent_to_decimal, rate, rate_percent
 
-# Margen de sobra para las potencias fraccionarias; el redondeo se hace explicito.
+# Headroom for the fractional powers; every rounding step is explicit anyway.
 getcontext().prec = 28
 
 ONE = Decimal(1)
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# Tasas
+# Rates
 # ══════════════════════════════════════════════════════════════════════════
 
 
 def periodic_rate(rate_type: RateType, annual_rate_percent: Decimal, days: int) -> Decimal:
-    """Tasa efectiva para un periodo de `days` dias, a partir de la tasa anual.
+    """Effective rate for a `days`-long period, derived from the annual rate.
 
-    TEA (efectiva):  i_d = (1 + TEA)^(d/360) - 1
-    TNA (nominal):   i_d = TNA * d/360        (proporcional, sin capitalizar)
+    TEA (effective): i_d = (1 + TEA)^(d/360) - 1
+    TNA (nominal):   i_d = TNA * d/360        (proportional, no compounding)
 
-    `annual_rate_percent` viene en porcentaje (40.00 == 40 %).
+    `annual_rate_percent` arrives as a percentage (40.00 == 40 %).
     """
     if days <= 0:
         raise BusinessRuleError(
@@ -52,16 +51,16 @@ def periodic_rate(rate_type: RateType, annual_rate_percent: Decimal, days: int) 
 
     factor = Decimal(days) / Decimal(settings.days_per_year)
     if rate_type is RateType.TEA:
-        # Efectiva: capitaliza dentro del anio.
+        # Effective: compounds within the year.
         return rate((ONE + annual) ** factor - ONE)
-    # Nominal: proporcional, no capitaliza.
+    # Nominal: straight proportional split, no compounding.
     return rate(annual * factor)
 
 
 def annualize(periodic: Decimal, days: int) -> Decimal:
-    """Lleva una tasa periodica a su equivalente anual efectiva, en %.
+    """Annualize a periodic rate into its effective annual equivalent, in %.
 
-    Sin comisiones ni seguros, esta es la TCEA del credito.
+    With no fees or insurance attached, this IS the credit's TCEA.
     """
     if periodic == 0:
         return Decimal("0.00")
@@ -71,10 +70,10 @@ def annualize(periodic: Decimal, days: int) -> Decimal:
 
 
 def late_interest(overdue_amount: Decimal, days_late: int) -> Decimal:
-    """Interes moratorio sobre el saldo exigible vencido.
+    """Late interest on the overdue outstanding amount.
 
-    Se aplica la tasa moratoria configurada (TEM) prorrateada a los dias de
-    atraso:  i = (1 + TEM)^(dias/30) - 1
+    Applies the configured monthly late rate (TEM), prorated over the days
+    late:  i = (1 + TEM)^(days/30) - 1
     """
     if days_late <= 0 or overdue_amount <= 0:
         return ZERO_MONEY
@@ -84,7 +83,7 @@ def late_interest(overdue_amount: Decimal, days_late: int) -> Decimal:
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# Cronograma (metodo frances)
+# Schedule (French method)
 # ══════════════════════════════════════════════════════════════════════════
 
 
@@ -101,16 +100,16 @@ class ScheduleRow:
 
 @dataclass(frozen=True)
 class Schedule:
-    amount: Decimal  # capital solicitado
-    financed_principal: Decimal  # capital sobre el que se arma el frances
+    amount: Decimal  # requested principal
+    financed_principal: Decimal  # principal the French block is actually built on
     rate_type: RateType
-    annual_rate: Decimal  # en %, tal como la ingreso el usuario
-    periodic_rate: Decimal  # fraccion decimal, 9 dp
-    periodic_rate_percent: Decimal  # el mismo valor en %, 7 dp
-    installment_amount: Decimal  # cuota constante del tramo frances
+    annual_rate: Decimal  # in %, exactly as the user typed it
+    periodic_rate: Decimal  # decimal fraction, 9 dp
+    periodic_rate_percent: Decimal  # same value as %, 7 dp
+    installment_amount: Decimal  # constant installment of the French block
     total_interest: Decimal
     total_payment: Decimal
-    tcea: Decimal  # % anual
+    tcea: Decimal  # annual %
     rows: tuple[ScheduleRow, ...]
 
     @property
@@ -119,11 +118,11 @@ class Schedule:
 
 
 def french_installment(principal: Decimal, periodic: Decimal, periods: int) -> Decimal:
-    """Cuota constante del metodo frances, sin redondear.
+    """Constant French installment, unrounded.
 
         C = P * [ i (1+i)^n ] / [ (1+i)^n - 1 ]
 
-    Con i = 0 degenera en C = P / n.
+    With i = 0 it degenerates into C = P / n.
     """
     if periods <= 0:
         raise BusinessRuleError(
@@ -147,14 +146,14 @@ def build_schedule(
     grace_type: GraceType = GraceType.none,
     grace_days: int = 0,
 ) -> Schedule:
-    """Arma el cronograma completo de un credito.
+    """Build a credit's full schedule.
 
-    Periodo de gracia:
-      * `none`    — las cuotas arrancan en start_date + frecuencia.
-      * `partial` — se cobra solo el interes del tramo de gracia como una cuota
-        extra (la N.deg 1); el capital no se toca y el frances arranca despues.
-      * `total`   — el interes del tramo de gracia se capitaliza al principal y
-        el frances corre sobre ese capital mayor, con las fechas corridas.
+    Grace period:
+      * `none`    - installments start at start_date + frequency.
+      * `partial` - the grace interest is charged as one extra interest-only
+        installment (#1); principal is untouched and the French block follows.
+      * `total`   - the grace interest capitalizes into the principal and the
+        French block runs on that larger principal, with dates pushed out.
     """
     validate_terms(
         amount=amount,
@@ -178,7 +177,7 @@ def build_schedule(
         grace_rate = periodic_rate(rate_type, annual_rate, effective_grace_days)
         grace_interest = money(amount * grace_rate)
         if grace_type is GraceType.partial:
-            # Cuota de solo interes: el saldo no se mueve.
+            # Interest-only installment: the balance does not budge.
             number += 1
             rows.append(
                 ScheduleRow(
@@ -191,10 +190,10 @@ def build_schedule(
                     closing_balance=amount,
                 )
             )
-        else:  # GraceType.total — el interes se capitaliza
+        else:  # GraceType.total - interest gets capitalized
             principal = money(amount + grace_interest)
 
-    # Tramo frances.
+    # French block.
     exact_installment = french_installment(principal, periodic, installments_count)
     constant_installment = money(exact_installment)
 
@@ -205,7 +204,7 @@ def build_schedule(
         interest = money(balance * periodic)
         is_last = period == installments_count
         if is_last:
-            # La ultima cuota absorbe el residuo del redondeo: el saldo cierra en 0.00.
+            # Last installment eats the rounding residue so the balance lands on 0.00.
             amortization = balance
             installment = money(interest + amortization)
         else:
@@ -250,7 +249,7 @@ def build_schedule(
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# Validaciones de condiciones
+# Term validation
 # ══════════════════════════════════════════════════════════════════════════
 
 
@@ -264,7 +263,7 @@ def validate_terms(
     grace_type: GraceType = GraceType.none,
     grace_days: int = 0,
 ) -> None:
-    """Aplica los limites del producto. Lanza BusinessRuleError con mensaje listo."""
+    """Enforce the product limits. Raises BusinessRuleError with a ready message."""
     symbol = settings.currency_symbol
 
     if amount <= 0:

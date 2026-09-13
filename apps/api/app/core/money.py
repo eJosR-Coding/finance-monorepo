@@ -1,14 +1,15 @@
-"""Helpers de precision monetaria.
+"""Money precision helpers.
 
-Regla del proyecto: plata con Decimal, nunca float. Se redondea SOLO al final,
-cuando el numero ya va a guardarse o mostrarse.
+House rule: money is Decimal, never float. Rounding happens ONLY at the end,
+right before a number is stored or shown. Floats would leave us cooked with
+0.30000000000000004 style residue.
 """
 
 from decimal import ROUND_HALF_UP, Decimal
 
 MONEY_DECIMALS = 2
-#: 9 decimales en la fraccion == 7 decimales cuando la tasa se muestra en %,
-#: que es la precision minima que pide el enunciado.
+#: 9 decimals on the fraction == 7 decimals once the rate is shown as a
+#: percentage, which is the minimum precision the assignment asks for.
 RATE_DECIMALS = 9
 RATE_PERCENT_DECIMALS = 7
 
@@ -21,22 +22,22 @@ ZERO_RATE = Decimal(0).quantize(RATE_EXPONENT)
 
 
 def money(value: Decimal | int | str) -> Decimal:
-    """Redondea un importe a 2 decimales (medio hacia arriba)."""
+    """Round an amount to 2 decimals (half up)."""
     return Decimal(value).quantize(MONEY_EXPONENT, rounding=ROUND_HALF_UP)
 
 
 def rate(value: Decimal | int | str) -> Decimal:
-    """Redondea una tasa (fraccion decimal) a 9 decimales."""
+    """Round a rate (decimal fraction) to 9 decimals."""
     return Decimal(value).quantize(RATE_EXPONENT, rounding=ROUND_HALF_UP)
 
 
 def rate_percent(value: Decimal | int | str) -> Decimal:
-    """Pasa una tasa en fraccion a porcentaje con 7 decimales: 0.006563965 -> 0.6563965."""
+    """Fraction to percentage with 7 decimals: 0.006563965 -> 0.6563965."""
     return (Decimal(value) * 100).quantize(RATE_PERCENT_EXPONENT, rounding=ROUND_HALF_UP)
 
 
 def percent_to_decimal(value: Decimal | int | str) -> Decimal:
-    """40.00 (%) -> 0.40. Sin redondear: la division queda en precision plena."""
+    """40.00 (%) -> 0.40. No rounding here, the division keeps full precision."""
     return Decimal(value) / Decimal(100)
 
 

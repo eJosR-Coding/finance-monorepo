@@ -1,4 +1,4 @@
-"""Enumeraciones del dominio. Los valores son exactamente los del ERD."""
+"""Domain enums. Values match the academic ERD exactly, no improvising."""
 
 from enum import StrEnum
 

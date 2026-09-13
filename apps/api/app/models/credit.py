@@ -1,4 +1,4 @@
-"""CREDIT — un fiado otorgado, con sus condiciones financieras congeladas."""
+"""CREDIT - a granted fiado with its financial terms frozen at grant time."""
 
 from datetime import date, datetime
 from decimal import Decimal
@@ -66,7 +66,7 @@ class Credit(Base):
 
     @property
     def code(self) -> str:
-        """Codigo visible del credito (CR-0021). Se deriva del id, no es columna."""
+        """Display code (CR-0021). Derived from the id - not a stored column."""
         return f"CR-{self.id:04d}"
 
     def __repr__(self) -> str:

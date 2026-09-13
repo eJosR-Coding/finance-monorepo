@@ -1,4 +1,4 @@
-"""CLIENT — la persona de la bodega que recibe el fiado."""
+"""CLIENT - the neighbour who gets the fiado."""
 
 from datetime import datetime
 from typing import TYPE_CHECKING

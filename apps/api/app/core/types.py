@@ -1,8 +1,8 @@
-"""Tipos de columna para SQLAlchemy.
+"""Custom SQLAlchemy column types.
 
-SQLite no tiene tipo decimal nativo: si se usa `Numeric` guarda floats y se
-pierde exactitud. Guardamos los Decimal como TEXTO y los devolvemos como
-Decimal, asi el saldo final es exactamente 0.00 y no 1.4e-17.
+SQLite has no native decimal type: `Numeric` quietly stores floats and the
+exactness dips. We persist Decimals as TEXT and hand them back as Decimal, so a
+settled credit reads exactly 0.00 instead of 1.4e-17.
 """
 
 from decimal import ROUND_HALF_UP, Decimal
@@ -13,7 +13,7 @@ from sqlalchemy.types import TypeDecorator
 
 
 class DecimalText(TypeDecorator[Decimal]):
-    """Decimal de precision fija persistido como TEXT."""
+    """Fixed-precision Decimal persisted as TEXT."""
 
     impl = String
     cache_ok = True
@@ -34,9 +34,9 @@ class DecimalText(TypeDecorator[Decimal]):
         return Decimal(value)
 
 
-#: Importes en soles (2 decimales).
+#: Amounts in soles (2 decimals).
 MoneyColumn = DecimalText(2)
-#: Tasas efectivas como fraccion decimal, 9 decimales == 7 decimales en %.
+#: Effective rates as a decimal fraction; 9 decimals == 7 decimals in %.
 RateColumn = DecimalText(9)
-#: Tasas anuales expresadas en porcentaje (ej. 40.00), 2 decimales.
+#: Annual rates written as a percentage (e.g. 40.00), 2 decimals.
 PercentColumn = DecimalText(2)
