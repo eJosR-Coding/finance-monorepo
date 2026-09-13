@@ -13,8 +13,9 @@ Generado el 12/09/2026.
 | 3 | Resultado del caso de prueba 2 | `uv run pytest -v -k caso-2` |
 | 4 | Respuesta JSON de `/credits/simulate` | Ver el comando del punto 4 mas abajo |
 | 5 | Captura del frontend con el cronograma | [docs/evidence/04-simulador-cronograma.png](evidence/04-simulador-cronograma.png), o abrir http://localhost:5173 -> Nuevo credito -> Simular |
-| 6 | Comparacion esperado vs obtenido | Tabla de la seccion 4 de este documento |
+| 6 | Comparacion esperado vs obtenido | Tabla de la seccion 5 de este documento |
 | 7 | Saldo final = 0 | Ultima fila de cada cronograma en [Anexo C](test-cases.md) |
+| 8 | Contraste contra Excel | [prestameami-cronogramas.xlsx](evidence/prestameami-cronogramas.xlsx) — ver seccion 5 |
 
 ### Comando para la evidencia 4
 
@@ -44,7 +45,7 @@ curl -s -X POST http://localhost:8000/api/credits/simulate \
 
 ```
 $ uv run pytest -q
-226 passed, 2 warnings in 34.90s
+242 passed, 2 warnings in 41.44s
 ```
 
 Los tests cubren la conversion de tasas, el metodo frances, la tasa cero, los limites de monto y plazo, los periodos de gracia, el interes moratorio, el bloqueo de clientes morosos y el flujo completo de la demo por HTTP.
@@ -79,7 +80,37 @@ a pagar S/ 141.38 y el **saldo final S/ 0.00**. Los mismos numeros que devuelve
 
 ![Dashboard en ingles](evidence/06-dashboard-en.png)
 
-## 4. Comparacion esperado vs obtenido
+## 4. Contraste contra Excel
+
+El archivo [prestameami-cronogramas.xlsx](evidence/prestameami-cronogramas.xlsx)
+reconstruye los dos casos **con formulas vivas de Excel**, no con numeros
+pegados. Cada hoja trae abajo una tabla que resta lo que calcula Excel menos lo
+que devuelve el sistema; la columna Diferencia debe dar 0.00 en todas las filas.
+
+| Concepto | Formula en la hoja |
+| --- | --- |
+| Tasa periodica | `=REDONDEAR((1+TEA)^(dias/360)-1; 9)` |
+| Cuota | `=REDONDEAR(PAGO(i; n; -P); 2)` |
+| Interes del periodo | `=REDONDEAR(saldo_anterior * i; 2)` |
+| Amortizacion | `=REDONDEAR(cuota - interes; 2)` |
+| Saldo | `=REDONDEAR(saldo_anterior - amortizacion; 2)` |
+| Ultima cuota | amortiza todo el saldo restante, para cerrar en 0.00 |
+
+La hoja **Simulador libre** permite cambiar capital, TEA, numero de cuotas y
+frecuencia, y recalcula el cronograma completo dentro de Excel.
+
+Esta equivalencia no se afirma de palabra: `tests/test_excel.py` regenera el
+libro, se lo entrega a LibreOffice para que **recalcule de verdad** todas las
+formulas, y compara celda por celda contra el motor. Si alguna vez divergen, la
+bateria de tests se pone en rojo.
+
+Para regenerarlo:
+
+```bash
+cd apps/api && uv run python scripts/generate_excel.py
+```
+
+## 5. Comparacion esperado vs obtenido
 
 La columna **Esperado** son los valores calculados a mano con las formulas del enunciado (definidos en `apps/api/scripts/academic_cases.py`). La columna **Sistema** es lo que devuelve el motor al ejecutarse ahora mismo.
 
@@ -116,6 +147,6 @@ La columna **Esperado** son los valores calculados a mano con las formulas del e
 | Cuota 2 — saldo final | 0.00 | 0.00 | +0.00 | OK |
 
 
-## 5. Conclusion
+## 6. Conclusion
 
 Todas las variables comparadas coinciden exactamente con el calculo manual: diferencia de 0.00 en cada fila. El saldo final de ambos cronogramas cierra en S/ 0.00, como exige el metodo frances.
