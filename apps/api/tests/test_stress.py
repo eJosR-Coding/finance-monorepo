@@ -123,6 +123,7 @@ def test_catorce_cuotas_diarias_dentro_del_plazo() -> None:
     assert schedule.total_payment == Decimal("200.00") + schedule.total_interest
 
 
+@pytest.mark.usefixtures("no_legal_rate_cap")
 def test_tasa_altisima_pero_valida_sigue_cerrando_en_cero() -> None:
     schedule = _schedule(annual_rate=Decimal("500.00"))
     assert schedule.total_interest > 0
@@ -189,6 +190,7 @@ def test_encadenar_dos_periodos_de_7_dias_equivale_al_de_14() -> None:
     assert abs(chained - tea_14) <= Decimal("0.000000010")
 
 
+@pytest.mark.usefixtures("no_legal_rate_cap")
 @pytest.mark.parametrize("annual", ["0.00", "12.00", "40.00", "60.00", "120.00"])
 @pytest.mark.parametrize("installments", [1, 2, 7, 14])
 def test_el_valor_presente_del_cronograma_es_el_capital(annual: str, installments: int) -> None:

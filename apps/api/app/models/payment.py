@@ -4,7 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, DateTime, ForeignKey, String
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, String
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,11 +20,23 @@ if TYPE_CHECKING:
 
 class Payment(Base):
     __tablename__ = "payments"
+    # Informe 8.5 / 8.7: positive amount, and strict allocation - late fee +
+    # interest + principal must add up exactly to what was received.
+    __table_args__ = (
+        CheckConstraint("CAST(amount_received AS REAL) > 0", name="ck_payment_amount_positive"),
+        CheckConstraint(
+            "ROUND(CAST(late_interest_amount AS REAL) + CAST(compensatory_interest_amount AS REAL)"
+            " + CAST(principal_amount AS REAL), 2) = ROUND(CAST(amount_received AS REAL), 2)",
+            name="ck_payment_allocation_matches",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    credit_id: Mapped[int] = mapped_column(ForeignKey("credits.id", ondelete="CASCADE"), index=True)
+    credit_id: Mapped[int] = mapped_column(
+        ForeignKey("credits.id", ondelete="RESTRICT"), index=True
+    )
     installment_id: Mapped[int] = mapped_column(
-        ForeignKey("installments.id", ondelete="CASCADE"), index=True
+        ForeignKey("installments.id", ondelete="RESTRICT"), index=True
     )
 
     payment_date: Mapped[date] = mapped_column(Date)

@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     # Prefilled TEA on the new-credit form; the user can still change it.
     default_annual_rate: Decimal = Decimal("40.00")
 
+    # RN-08: BCRP maximum conventional compensatory rate (effective annual, %).
+    # For operations between parties outside the financial system it equals the
+    # cap for national-currency loans. 114.13 % was in force from 01/05/2026 to
+    # 31/10/2026; the BCRP republishes it every six months, so it is a setting
+    # (PRESTAMEAMI_MAX_LEGAL_ANNUAL_RATE), never a constant in the formulas.
+    max_legal_annual_rate: Decimal = Decimal("114.13")
+
     # Late-payment rate: 2% monthly (TEM). Deliberately NOT an ERD column — it is
     # a system-wide parameter, same for every credit. Prorated over days late on
     # a 30-day base.

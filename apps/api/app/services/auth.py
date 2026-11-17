@@ -2,6 +2,7 @@
 
 from sqlalchemy.orm import Session
 
+from app.core.enums import UserStatus
 from app.core.errors import AuthError
 from app.core.security import create_access_token, verify_password
 from app.models import User
@@ -15,4 +16,6 @@ def authenticate(session: Session, email: str, password: str) -> tuple[User, str
     # Same message either way: we don't leak which emails exist.
     if user is None or not verify_password(password, user.password_hash):
         raise AuthError("INVALID_CREDENTIALS", INVALID_CREDENTIALS)
+    if user.status is not UserStatus.active:
+        raise AuthError("USER_INACTIVE", "Esta cuenta esta desactivada.")
     return user, create_access_token(str(user.id))

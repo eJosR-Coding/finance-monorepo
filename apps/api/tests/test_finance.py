@@ -118,6 +118,7 @@ def test_tasa_cero_reparte_el_capital_en_partes_iguales() -> None:
 # ── Final balance must be exactly zero ─────────────────────────────────────
 
 
+@pytest.mark.usefixtures("no_legal_rate_cap")
 @pytest.mark.parametrize("amount", ["1.00", "33.33", "99.99", "140.00", "200.00"])
 @pytest.mark.parametrize("installments", [1, 2, 3, 7])
 @pytest.mark.parametrize("annual_rate", ["0.00", "12.50", "40.00", "60.00", "180.00"])

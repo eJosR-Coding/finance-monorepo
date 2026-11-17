@@ -26,7 +26,9 @@ class Installment(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    credit_id: Mapped[int] = mapped_column(ForeignKey("credits.id", ondelete="CASCADE"), index=True)
+    credit_id: Mapped[int] = mapped_column(
+        ForeignKey("credits.id", ondelete="RESTRICT"), index=True
+    )
 
     installment_number: Mapped[int] = mapped_column(Integer)
     due_date: Mapped[date] = mapped_column(Date)
@@ -44,7 +46,10 @@ class Installment(Base):
 
     credit: Mapped["Credit"] = relationship(back_populates="installments")
     payments: Mapped[list["Payment"]] = relationship(
-        back_populates="installment", cascade="all, delete-orphan", order_by="Payment.id"
+        back_populates="installment",
+        cascade="save-update, merge",
+        passive_deletes="all",
+        order_by="Payment.id",
     )
 
     def __repr__(self) -> str:

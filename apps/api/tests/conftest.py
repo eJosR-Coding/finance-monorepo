@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core import clock
+from app.core.config import settings
 from app.core.security import hash_password
 from app.database import Base, get_session
 from app.main import app
@@ -32,6 +34,12 @@ def frozen_today(monkeypatch: pytest.MonkeyPatch) -> date:
     """
     monkeypatch.setattr(clock, "today", lambda: TODAY)
     return TODAY
+
+
+@pytest.fixture
+def no_legal_rate_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Lift the BCRP cap for tests that stress the pure math with extreme rates."""
+    monkeypatch.setattr(settings, "max_legal_annual_rate", Decimal("100000"))
 
 
 @pytest.fixture

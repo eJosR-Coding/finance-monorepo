@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from sqlalchemy.orm import Session
 
 from app.core import clock
-from app.core.enums import InstallmentStatus
+from app.core.enums import CreditStatus, InstallmentStatus
 from app.core.money import ZERO_MONEY, money
 from app.repositories import clients as clients_repo
 from app.repositories import credits as credits_repo
@@ -69,6 +69,8 @@ def build(session: Session, today: date | None = None) -> DashboardResponse:
 
     return DashboardResponse(
         active_credits=len(open_credits),
+        overdue_credits=sum(1 for c in open_credits if c.status == CreditStatus.overdue),
+        active_clients=len({c.client_id for c in open_credits}),
         outstanding_total=money(
             sum((c.outstanding_balance for c in open_credits), ZERO_MONEY)
         ),

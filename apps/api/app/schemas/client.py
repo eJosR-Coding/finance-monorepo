@@ -11,12 +11,34 @@ from app.schemas.credit import CreditListItem
 from app.schemas.payment import PaymentRead
 
 
+def _clean_phone(value: str | None) -> str | None:
+    """Optional, 9 digits once spaces and dashes are dropped (informe 6.1.1)."""
+    if value is None:
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    digits = cleaned.replace(" ", "").replace("-", "")
+    if not digits.isdigit() or len(digits) != 9:
+        raise ValueError("El telefono debe tener 9 digitos.")
+    return cleaned
+
+
+def _clean_optional_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    return cleaned or None
+
+
 class ClientCreate(BaseModel):
     dni: str = Field(min_length=8, max_length=8, examples=["71456238"])
     first_name: str = Field(min_length=1, max_length=80, examples=["Maria"])
     last_name: str = Field(min_length=1, max_length=80, examples=["Torres"])
-    phone: str = Field(min_length=6, max_length=20, examples=["987 234 521"])
-    address: str = Field(min_length=1, max_length=200, examples=["Av. Los Jardines 245, Lima"])
+    phone: str | None = Field(default=None, max_length=15, examples=["987 234 521"])
+    address: str | None = Field(
+        default=None, max_length=255, examples=["Av. Los Jardines 245, Lima"]
+    )
 
     @field_validator("dni")
     @classmethod
@@ -26,20 +48,46 @@ class ClientCreate(BaseModel):
             raise ValueError("El DNI debe tener 8 digitos numericos.")
         return cleaned
 
-    @field_validator("first_name", "last_name", "phone", "address")
+    @field_validator("first_name", "last_name")
     @classmethod
     def strip_text(cls, value: str) -> str:
-        return value.strip()
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Este campo es obligatorio.")
+        return cleaned
+
+    @field_validator("phone")
+    @classmethod
+    def phone_digits(cls, value: str | None) -> str | None:
+        return _clean_phone(value)
+
+    @field_validator("address")
+    @classmethod
+    def address_text(cls, value: str | None) -> str | None:
+        return _clean_optional_text(value)
 
 
 class ClientUpdate(BaseModel):
-    """Partial update. Only the fields actually sent get touched."""
+    """Partial update. Only the fields actually sent get touched.
+
+    Phone and address are optional data: sending "" (or null) clears them.
+    """
 
     first_name: str | None = Field(default=None, min_length=1, max_length=80)
     last_name: str | None = Field(default=None, min_length=1, max_length=80)
-    phone: str | None = Field(default=None, min_length=6, max_length=20)
-    address: str | None = Field(default=None, min_length=1, max_length=200)
+    phone: str | None = Field(default=None, max_length=15)
+    address: str | None = Field(default=None, max_length=255)
     credit_status: ClientCreditStatus | None = None
+
+    @field_validator("phone")
+    @classmethod
+    def phone_digits(cls, value: str | None) -> str | None:
+        return _clean_phone(value)
+
+    @field_validator("address")
+    @classmethod
+    def address_text(cls, value: str | None) -> str | None:
+        return _clean_optional_text(value)
 
 
 class ClientRead(BaseModel):
@@ -49,8 +97,8 @@ class ClientRead(BaseModel):
     dni: str
     first_name: str
     last_name: str
-    phone: str
-    address: str
+    phone: str | None
+    address: str | None
     credit_status: ClientCreditStatus
     created_at: datetime
     updated_at: datetime
