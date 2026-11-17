@@ -317,6 +317,8 @@ export const es = {
     outcomeSurplus: 'Pago excedente',
     outcomeOverdue: 'Cuota vencida',
     waterfall: 'El pago se aplica en este orden: mora, interes compensatorio y capital.',
+    surplusWarning:
+      'El monto excede la deuda en {{extra}}. No se entrega vuelto: el maximo a cobrar es {{max}}.',
     submit: 'Registrar pago',
     submitting: 'Registrando...',
     confirmTitle: 'Confirmar registro de pago',

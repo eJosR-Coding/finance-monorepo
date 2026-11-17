@@ -317,6 +317,8 @@ export const en: Catalog = {
     outcomeSurplus: 'Overpayment',
     outcomeOverdue: 'Overdue installment',
     waterfall: 'Payments apply in this order: late interest, compensatory interest, principal.',
+    surplusWarning:
+      'The amount exceeds the debt by {{extra}}. No change is given: the most you can collect is {{max}}.',
     submit: 'Record payment',
     submitting: 'Saving...',
     confirmTitle: 'Confirm payment',
