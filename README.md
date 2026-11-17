@@ -42,8 +42,9 @@ paga lo que debe.
 | [uv](https://docs.astral.sh/uv/) | reciente | Entorno y dependencias de Python |
 | [Node.js](https://nodejs.org/) | 20 o superior | Frontend |
 
-No hace falta nada mas: ni Docker, ni base de datos externa, ni cuentas en la
-nube. Todo corre en local.
+Para desarrollar no hace falta nada mas: ni Docker, ni base de datos externa,
+ni cuentas en la nube. En local todo corre con SQLite. El despliegue (Render +
+Neon) se describe en [Despliegue](#despliegue).
 
 ---
 
@@ -306,10 +307,73 @@ sus resultados con los del motor, celda por celda.
 
 ## Stack
 
-**Backend:** Python 3.12+, FastAPI, Pydantic, SQLAlchemy 2.x, SQLite, uv, pytest, ruff.
+**Backend:** Python 3.12+, FastAPI, Pydantic, SQLAlchemy 2.x, SQLite (local) y
+PostgreSQL (desplegado), uv, pytest, ruff.
 
 **Frontend:** React, TypeScript (modo estricto), Vite, Tailwind CSS v4,
 React Router, TanStack Query, react-i18next.
 
-Sin Supabase, Firebase, PostgreSQL remoto, Redis, Docker, microservicios, colas,
-nube, autenticacion externa ni IA.
+**Despliegue:** Docker, Render (servicio web) y Neon (PostgreSQL gestionado).
+
+Sin Supabase, Firebase, Redis, microservicios, colas, autenticacion externa ni IA.
+
+---
+
+## Despliegue
+
+Un solo servicio: la imagen compila el frontend y FastAPI lo sirve junto con la
+API, asi que hay una sola URL y no hay CORS. La base es PostgreSQL en Neon,
+porque el disco de los planes gratuitos se borra en cada reinicio y SQLite
+perderia los datos.
+
+### 1. Base de datos (Neon)
+
+1. Crea un proyecto en [neon.tech](https://neon.tech) (region recomendada: la
+   mas cercana a la de Render, p. ej. `us-east`).
+2. Copia la *connection string* (`postgresql://...?sslmode=require`).
+
+Las tablas se crean solas en el primer arranque de la API.
+
+### 2. Servicio web (Render)
+
+1. En [render.com](https://render.com): **New > Blueprint** y elige este
+   repositorio. Render lee `render.yaml`.
+2. Completa las dos variables que pide:
+   - `PRESTAMEAMI_DATABASE_URL`: la connection string de Neon.
+   - `PRESTAMEAMI_ADMIN_PASSWORD`: la contrasenia del administrador.
+3. **Apply**. Cuando termine, la app queda en `https://prestameami.onrender.com`
+   (o el nombre que Render asigne).
+
+En el primer arranque, con la base vacia, la API crea al administrador
+(`admin@prestameami.pe` con la contrasenia de la variable) y carga los datos de
+demostracion (`PRESTAMEAMI_SEED_DEMO_DATA=true`). En los arranques siguientes no
+toca nada. `PRESTAMEAMI_SECRET_KEY` la genera Render.
+
+| Variable | Para que |
+| --- | --- |
+| `PRESTAMEAMI_DATABASE_URL` | Conexion a PostgreSQL (`postgres://` y `postgresql://` se aceptan). |
+| `PRESTAMEAMI_ADMIN_PASSWORD` | Contrasenia del administrador en el primer arranque. |
+| `PRESTAMEAMI_SECRET_KEY` | Firma de los tokens de sesion. |
+| `PRESTAMEAMI_SEED_DEMO_DATA` | `true` carga la demo si la base esta vacia. |
+| `PRESTAMEAMI_MAX_LEGAL_ANNUAL_RATE` | Tope legal BCRP (opcional, por defecto 114.13). |
+| `TZ` | `America/Lima`: las fechas de vencimiento y mora siguen la hora de Lima. |
+
+El plan gratuito de Render se suspende tras 15 minutos sin uso: la primera
+visita despues tarda unos 30 a 50 segundos en responder. Conviene abrir la app
+unos minutos antes de exponer.
+
+### Probar la imagen en local
+
+```bash
+docker build -t prestameami .
+docker run -p 8000:8000 -e PRESTAMEAMI_DATABASE_URL=postgresql://...   -e PRESTAMEAMI_ADMIN_PASSWORD=... -e PRESTAMEAMI_SEED_DEMO_DATA=true prestameami
+```
+
+### Tests contra PostgreSQL
+
+La misma bateria corre contra Postgres si se le pasa una base vacia:
+
+```bash
+cd apps/api
+PRESTAMEAMI_TEST_DATABASE_URL=postgresql://user:pass@localhost:5432/test uv run pytest
+```

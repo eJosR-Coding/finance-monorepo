@@ -23,10 +23,12 @@ class Payment(Base):
     # Informe 8.5 / 8.7: positive amount, and strict allocation - late fee +
     # interest + principal must add up exactly to what was received.
     __table_args__ = (
-        CheckConstraint("CAST(amount_received AS REAL) > 0", name="ck_payment_amount_positive"),
+        CheckConstraint("CAST(amount_received AS NUMERIC) > 0", name="ck_payment_amount_positive"),
         CheckConstraint(
-            "ROUND(CAST(late_interest_amount AS REAL) + CAST(compensatory_interest_amount AS REAL)"
-            " + CAST(principal_amount AS REAL), 2) = ROUND(CAST(amount_received AS REAL), 2)",
+            "ROUND(CAST(late_interest_amount AS NUMERIC)"
+            " + CAST(compensatory_interest_amount AS NUMERIC)"
+            " + CAST(principal_amount AS NUMERIC), 2)"
+            " = ROUND(CAST(amount_received AS NUMERIC), 2)",
             name="ck_payment_allocation_matches",
         ),
     )

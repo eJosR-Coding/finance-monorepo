@@ -7,6 +7,7 @@ sprinkled across modules. Override with env vars (PRESTAMEAMI_ prefix).
 from decimal import Decimal
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # apps/api/ is the backend root, so the db path never depends on your cwd.
@@ -21,7 +22,23 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
 
     # ── Persistence ─────────────────────────────────────────────────────────
+    # Local: a SQLite file. Deployed: PostgreSQL (Neon), passed in as
+    # PRESTAMEAMI_DATABASE_URL. Both run the same models and constraints.
     database_url: str = f"sqlite:///{DATA_DIR / 'prestameami.db'}"
+
+    # ── First boot ──────────────────────────────────────────────────────────
+    # When the users table is empty the API creates the administrator. With
+    # seed_demo_data it loads the demo clients and credits too (for the
+    # presentation). It never runs again once a user exists.
+    admin_name: str = "Carlos Mendoza"
+    admin_email: str = "admin@prestameami.pe"
+    admin_password: str = "admin123"
+    seed_demo_data: bool = False
+
+    # ── Frontend ────────────────────────────────────────────────────────────
+    # When the built SPA exists (apps/web/dist), the API serves it too, so a
+    # deploy is one service and one URL. Locally Vite serves it instead.
+    web_dist_dir: Path = BASE_DIR.parent / "web" / "dist"
 
     # ── Session ─────────────────────────────────────────────────────────────
     # Academic single-admin app: locally signed token, no OAuth in sight.
@@ -69,6 +86,19 @@ class Settings(BaseSettings):
 
     # ── CORS ────────────────────────────────────────────────────────────────
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
+    @field_validator("database_url")
+    @classmethod
+    def use_psycopg_driver(cls, value: str) -> str:
+        """Neon and Render hand out postgres:// URLs; SQLAlchemy wants a driver."""
+        for prefix in ("postgres://", "postgresql://"):
+            if value.startswith(prefix):
+                return "postgresql+psycopg://" + value[len(prefix) :]
+        return value
+
+    @property
+    def is_sqlite(self) -> bool:
+        return self.database_url.startswith("sqlite")
 
 
 settings = Settings()

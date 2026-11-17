@@ -17,8 +17,10 @@ export function LoginPage() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
 
-  const [email, setEmail] = useState('admin@prestameami.pe')
-  const [password, setPassword] = useState('admin123')
+  // Demo credentials are prefilled only in local development: a deployed site
+  // must not show (or hand out) the admin password.
+  const [email, setEmail] = useState(import.meta.env.DEV ? 'admin@prestameami.pe' : '')
+  const [password, setPassword] = useState(import.meta.env.DEV ? 'admin123' : '')
   const [remember, setRemember] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -270,9 +272,11 @@ export function LoginPage() {
           <p style={{ fontSize: 12.5, color: 'var(--color-neutral-500)', margin: 0 }}>
             {t('auth.quoteAuthor')}
           </p>
-          <p style={{ fontSize: 12, color: 'var(--color-neutral-600)', marginTop: 24 }}>
-            {t('auth.demoHint')}
-          </p>
+          {import.meta.env.DEV && (
+            <p style={{ fontSize: 12, color: 'var(--color-neutral-600)', marginTop: 24 }}>
+              {t('auth.demoHint')}
+            </p>
+          )}
         </div>
       </div>
     </div>

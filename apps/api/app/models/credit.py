@@ -26,7 +26,8 @@ class Credit(Base):
     # by the service. Amounts are TEXT (see core/types.py), hence the CASTs.
     __table_args__ = (
         CheckConstraint(
-            f"CAST(amount AS REAL) > 0 AND CAST(amount AS REAL) <= {settings.max_credit_amount}",
+            "CAST(amount AS NUMERIC) > 0"
+            f" AND CAST(amount AS NUMERIC) <= {settings.max_credit_amount}",
             name="ck_credit_amount_range",
         ),
         CheckConstraint(

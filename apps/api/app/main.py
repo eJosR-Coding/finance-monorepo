@@ -5,11 +5,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
+from app.bootstrap import bootstrap
 from app.core.config import settings
-from app.core.errors import BusinessRuleError
-from app.database import create_all
+from app.core.errors import BusinessRuleError, NotFoundError
+from app.database import SessionLocal, create_all
 from app.routers import auth, clients, credits, dashboard, payments
 from app.schemas.common import ErrorResponse
 
@@ -18,6 +20,8 @@ from app.schemas.common import ErrorResponse
 async def lifespan(app: FastAPI):
     # Academic app: create the schema on boot instead of running migrations.
     create_all()
+    with SessionLocal() as session:
+        bootstrap(session)
     yield
 
 
@@ -74,3 +78,21 @@ app.include_router(dashboard.router, prefix=settings.api_prefix)
 def health() -> dict[str, str]:
     """Sirve para comprobar que la API esta levantada."""
     return {"status": "ok", "app": settings.app_name}
+
+
+# ── Built frontend ─────────────────────────────────────────────────────────
+# In a deploy the API also serves the compiled SPA, so there is one service,
+# one URL and no CORS. Registered last: every /api route above wins first.
+_dist = settings.web_dist_dir
+if (_dist / "index.html").is_file():
+    app.mount("/assets", StaticFiles(directory=_dist / "assets"), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def spa(full_path: str) -> FileResponse:
+        if full_path.startswith(settings.api_prefix.strip("/") + "/"):
+            raise NotFoundError("NOT_FOUND", "La ruta solicitada no existe.")
+        candidate = (_dist / full_path).resolve()
+        if full_path and candidate.is_file() and candidate.is_relative_to(_dist.resolve()):
+            return FileResponse(candidate)
+        # Any client-side route (/clientes/3, /creditos/nuevo...) gets the SPA.
+        return FileResponse(_dist / "index.html")
