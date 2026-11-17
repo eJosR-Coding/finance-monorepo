@@ -85,6 +85,9 @@ def list_clients(
     return items
 
 
+REQUIRED_FIELDS = {"first_name", "last_name", "credit_status"}
+
+
 def get_client(session: Session, client_id: int, today: date | None = None) -> Client:
     delinquency.sync(session, today or clock.today())
     session.commit()
@@ -132,6 +135,8 @@ def update(session: Session, client_id: int, payload: ClientUpdate) -> Client:
                 "No se puede habilitar al cliente mientras mantenga una deuda vencida.",
             )
         for field, value in data.items():
+            if value is None and field in REQUIRED_FIELDS:
+                continue  # an explicit null can't wipe a mandatory column
             setattr(client, field, value)
         session.commit()
     except Exception:

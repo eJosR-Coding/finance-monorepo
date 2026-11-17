@@ -35,6 +35,7 @@ def config() -> ConfigResponse:
         money_decimals=settings.money_decimals,
         rate_percent_decimals=settings.rate_percent_decimals,
         default_annual_rate=settings.default_annual_rate,
+        max_legal_annual_rate=settings.max_legal_annual_rate,
         late_monthly_rate_percent=settings.late_monthly_rate * 100,
         overdue_installments_to_block=settings.overdue_installments_to_block,
     )

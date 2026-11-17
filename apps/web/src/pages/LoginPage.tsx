@@ -1,6 +1,6 @@
 /** Split-screen sign in. No sidebar here. */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -17,11 +17,14 @@ export function LoginPage() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
 
-  const [email, setEmail] = useState('admin@prestameami.pe')
-  const [password, setPassword] = useState('admin123')
+  // Demo credentials are prefilled only in local development: a deployed site
+  // must not show (or hand out) the admin password.
+  const [email, setEmail] = useState(import.meta.env.DEV ? 'admin@prestameami.pe' : '')
+  const [password, setPassword] = useState(import.meta.env.DEV ? 'admin123' : '')
   const [remember, setRemember] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [forgotOpen, setForgotOpen] = useState(false)
 
   if (user !== null) return <Navigate to="/dashboard" replace />
 
@@ -40,6 +43,7 @@ export function LoginPage() {
   }
 
   return (
+    <>
     <div
       style={{
         display: 'flex',
@@ -122,7 +126,21 @@ export function LoginPage() {
                 />
                 {t('auth.remember')}
               </label>
-              <span className="muted">{t('auth.forgot')}</span>
+              <button
+                type="button"
+                className="muted"
+                onClick={() => setForgotOpen(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  font: 'inherit',
+                  textDecoration: 'underline',
+                }}
+              >
+                {t('auth.forgot')}
+              </button>
             </div>
 
             <button
@@ -254,9 +272,64 @@ export function LoginPage() {
           <p style={{ fontSize: 12.5, color: 'var(--color-neutral-500)', margin: 0 }}>
             {t('auth.quoteAuthor')}
           </p>
-          <p style={{ fontSize: 12, color: 'var(--color-neutral-600)', marginTop: 24 }}>
-            {t('auth.demoHint')}
+          {import.meta.env.DEV && (
+            <p style={{ fontSize: 12, color: 'var(--color-neutral-600)', marginTop: 24 }}>
+              {t('auth.demoHint')}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+      <ForgotPasswordDialog open={forgotOpen} onClose={() => setForgotOpen(false)} />
+    </>
+  )
+}
+
+function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation()
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  if (!open) return null
+  return (
+    <div className="dialog-backdrop" onClick={onClose}>
+      <div
+        className="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('auth.forgotTitle')}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="dialog-title">{t('auth.forgotTitle')}</div>
+        <div className="dialog-body">
+          <p style={{ margin: '0 0 10px' }}>{t('auth.forgotBody')}</p>
+          <pre
+            style={{
+              margin: '0 0 10px',
+              padding: '10px 12px',
+              borderRadius: 6,
+              background: 'var(--color-surface)',
+              fontSize: 12.5,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+            }}
+          >
+            uv run python scripts/reset_password.py admin@prestameami.pe NuevaClave123
+          </pre>
+          <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+            {t('auth.forgotNote')}
           </p>
+        </div>
+        <div className="dialog-actions">
+          <button type="button" className="btn btn-primary" onClick={onClose}>
+            {t('common.close')}
+          </button>
         </div>
       </div>
     </div>

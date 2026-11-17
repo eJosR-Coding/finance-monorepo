@@ -57,6 +57,42 @@ def periodic_rate(rate_type: RateType, annual_rate_percent: Decimal, days: int) 
     return rate(annual * factor)
 
 
+def effective_annual_rate(rate_type: RateType, annual_rate_percent: Decimal, days: int) -> Decimal:
+    """Effective annual equivalent of the rate the user typed, in %, unrounded.
+
+    TEA: it already is the effective annual rate.
+    TNA: capitalizes m = 360/d times a year, one per installment period:
+         TEA = (1 + TNA/m)^m - 1
+
+    This is the figure the BCRP cap is expressed in, so it is what gets checked.
+    """
+    annual = percent_to_decimal(annual_rate_percent)
+    if rate_type is RateType.TEA or annual == 0:
+        return annual * 100
+    m = Decimal(settings.days_per_year) / Decimal(days)
+    return ((ONE + annual / m) ** m - ONE) * 100
+
+
+def validate_legal_rate(rate_type: RateType, annual_rate_percent: Decimal, days: int) -> None:
+    """RN-08: the agreed rate may not exceed the BCRP maximum in force.
+
+    The cap is a setting, never a constant baked into the logic: the BCRP
+    republishes it every six months (Ley 29571, art. 94).
+    """
+    cap = settings.max_legal_annual_rate
+    if days <= 0:
+        return  # validate_terms reports the bad frequency with its own message
+    effective = effective_annual_rate(rate_type, annual_rate_percent, days)
+    if effective > cap:
+        raise BusinessRuleError(
+            "RATE_ABOVE_LEGAL_MAX",
+            f"La tasa equivale a una TEA de {effective.quantize(Decimal('0.01'))} % y supera "
+            f"la tasa maxima legal vigente del BCRP ({cap:.2f} % anual).",
+            effective_annual_rate=str(effective.quantize(Decimal("0.01"))),
+            max_legal_annual_rate=str(cap),
+        )
+
+
 def annualize(periodic: Decimal, days: int) -> Decimal:
     """Annualize a periodic rate into its effective annual equivalent, in %.
 
@@ -164,6 +200,7 @@ def build_schedule(
         grace_type=grace_type,
         grace_days=grace_days,
     )
+    validate_legal_rate(rate_type, annual_rate, payment_frequency_days)
 
     effective_grace_days = grace_days if grace_type is not GraceType.none else 0
     periodic = periodic_rate(rate_type, annual_rate, payment_frequency_days)

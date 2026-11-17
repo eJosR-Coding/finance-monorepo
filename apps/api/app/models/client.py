@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import CheckConstraint, DateTime, String
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,13 +17,14 @@ if TYPE_CHECKING:
 
 class Client(Base):
     __tablename__ = "clients"
+    __table_args__ = (CheckConstraint("length(dni) = 8", name="ck_client_dni_8_digits"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     dni: Mapped[str] = mapped_column(String(8), unique=True, index=True)
     first_name: Mapped[str] = mapped_column(String(80))
     last_name: Mapped[str] = mapped_column(String(80))
-    phone: Mapped[str] = mapped_column(String(20))
-    address: Mapped[str] = mapped_column(String(200))
+    phone: Mapped[str | None] = mapped_column(String(15), nullable=True)
+    address: Mapped[str | None] = mapped_column(String(255), nullable=True)
     credit_status: Mapped[ClientCreditStatus] = mapped_column(
         SAEnum(ClientCreditStatus, native_enum=False, validate_strings=True, length=20),
         default=ClientCreditStatus.enabled,
@@ -34,7 +35,9 @@ class Client(Base):
     )
 
     credits: Mapped[list["Credit"]] = relationship(
-        back_populates="client", cascade="all, delete-orphan", order_by="Credit.id.desc()"
+        back_populates="client",
+        cascade="save-update, merge", passive_deletes="all",
+        order_by="Credit.id.desc()",
     )
 
     @property

@@ -74,6 +74,17 @@ export function DashboardPage() {
               meta={t('dashboard.blockedClientsMeta')}
               tone={data.blocked_clients > 0 ? 'alert' : 'default'}
             />
+            <StatCard
+              label={t('dashboard.activeClients')}
+              value={data.active_clients}
+              meta={t('dashboard.activeClientsMeta')}
+            />
+            <StatCard
+              label={t('dashboard.overdueCredits')}
+              value={data.overdue_credits}
+              meta={t('dashboard.overdueCreditsMeta')}
+              tone={data.overdue_credits > 0 ? 'alert' : 'default'}
+            />
           </div>
 
           <div

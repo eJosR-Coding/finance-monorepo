@@ -55,7 +55,7 @@ export function ClientDetailPage() {
               <StatusTag status={client.credit_status} />
             </div>
             <div style={{ fontSize: 13, opacity: 0.6 }}>
-              DNI {client.dni} · {client.phone} · {client.address}
+              {[`DNI ${client.dni}`, client.phone, client.address].filter(Boolean).join(' · ')}
             </div>
           </div>
         </div>

@@ -139,8 +139,14 @@ export function RegisterPaymentPage() {
     return <span className="tag tag-success">{t('payment.outcomeExact')}</span>
   }
 
+  // Algorithm 7.3: no change is handed back, so an amount above the debt can't be registered.
+  const surplus = preview !== null && Number(preview.unapplied_amount) > 0
   const canSubmit =
-    preview !== null && Number(amount) > 0 && !createMutation.isPending && credit.status !== 'paid'
+    preview !== null &&
+    Number(amount) > 0 &&
+    !surplus &&
+    !createMutation.isPending &&
+    credit.status !== 'paid'
 
   return (
     <div style={{ maxWidth: 1100 }}>
@@ -190,7 +196,12 @@ export function RegisterPaymentPage() {
         <div>
           <p className="sectitle">{t('payment.section')}</p>
 
-          <Field label={t('payment.date')} htmlFor="date" className="mb-4">
+          <Field
+            label={t('payment.date')}
+            htmlFor="date"
+            tip={t('payment.dateTip')}
+            className="mb-4"
+          >
             <input
               id="date"
               type="date"
@@ -200,7 +211,12 @@ export function RegisterPaymentPage() {
             />
           </Field>
 
-          <Field label={t('payment.amount')} htmlFor="amount" className="mb-4">
+          <Field
+            label={t('payment.amount')}
+            htmlFor="amount"
+            tip={t('payment.amountTip')}
+            className="mb-4"
+          >
             <input
               id="amount"
               className="input"
@@ -308,6 +324,14 @@ export function RegisterPaymentPage() {
                     </span>
                   )}
                 </div>
+                {surplus && (
+                  <p className="field-error" role="alert" style={{ marginTop: 12 }}>
+                    {t('payment.surplusWarning', {
+                      max: formatMoney(preview.total_applied),
+                      extra: formatMoney(preview.unapplied_amount),
+                    })}
+                  </p>
+                )}
               </>
             )}
           </div>

@@ -3,6 +3,15 @@
 from enum import StrEnum
 
 
+class UserRole(StrEnum):
+    admin = "admin"
+
+
+class UserStatus(StrEnum):
+    active = "active"
+    inactive = "inactive"
+
+
 class ClientCreditStatus(StrEnum):
     enabled = "enabled"
     blocked = "blocked"

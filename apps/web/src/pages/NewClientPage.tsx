@@ -60,8 +60,8 @@ export function NewClientPage() {
     const found: Errors = {}
     if (form.first_name.trim() === '') found.first_name = t('validation.required')
     if (form.last_name.trim() === '') found.last_name = t('validation.required')
-    if (form.address.trim() === '') found.address = t('validation.required')
-    if (form.phone.trim().length < 6) found.phone = t('validation.phoneShort')
+    const phoneDigits = (form.phone ?? '').replace(/[\s-]/g, '')
+    if (phoneDigits !== '' && !/^\d{9}$/.test(phoneDigits)) found.phone = t('validation.phoneDigits')
     if (form.dni.trim().length !== 8) found.dni = t('validation.dniLength')
     else if (!/^\d+$/.test(form.dni.trim())) found.dni = t('validation.dniDigits')
     setErrors(found)
@@ -76,8 +76,8 @@ export function NewClientPage() {
       dni: form.dni.trim(),
       first_name: form.first_name.trim(),
       last_name: form.last_name.trim(),
-      phone: form.phone.trim(),
-      address: form.address.trim(),
+      phone: (form.phone ?? '').trim() || null,
+      address: (form.address ?? '').trim() || null,
     })
   }
 
@@ -113,6 +113,7 @@ export function NewClientPage() {
         <Field
           label={t('newClient.dni')}
           htmlFor="dni"
+          tip={t('newClient.dniTip')}
           error={errors.dni}
           className="mb-6"
         >
@@ -133,21 +134,33 @@ export function NewClientPage() {
         <div
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}
         >
-          <Field label={t('newClient.phone')} htmlFor="phone" error={errors.phone}>
+          <Field
+            label={`${t('newClient.phone')} ${t('newClient.optional')}`}
+            htmlFor="phone"
+            tip={t('newClient.phoneTip')}
+            error={errors.phone}
+          >
             <input
               id="phone"
               className={errors.phone ? 'input input-invalid' : 'input'}
               placeholder={t('newClient.phonePlaceholder')}
-              value={form.phone}
+              inputMode="tel"
+              maxLength={15}
+              value={form.phone ?? ''}
               onChange={(event) => set('phone', event.target.value)}
             />
           </Field>
-          <Field label={t('newClient.address')} htmlFor="address" error={errors.address}>
+          <Field
+            label={`${t('newClient.address')} ${t('newClient.optional')}`}
+            htmlFor="address"
+            error={errors.address}
+          >
             <input
               id="address"
               className={errors.address ? 'input input-invalid' : 'input'}
               placeholder={t('newClient.addressPlaceholder')}
-              value={form.address}
+              maxLength={255}
+              value={form.address ?? ''}
               onChange={(event) => set('address', event.target.value)}
             />
           </Field>

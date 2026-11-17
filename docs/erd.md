@@ -14,6 +14,8 @@ erDiagram
         string name
         string email
         string password_hash
+        enum role
+        enum status
         datetime created_at
     }
     CLIENT {

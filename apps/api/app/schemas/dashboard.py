@@ -34,6 +34,8 @@ class RecentCredit(BaseModel):
 
 class DashboardResponse(BaseModel):
     active_credits: int
+    overdue_credits: int
+    active_clients: int  # clients with at least one open credit
     outstanding_total: Money
     collected_today: Money
     payments_today: int
@@ -79,5 +81,6 @@ class ConfigResponse(BaseModel):
     money_decimals: int
     rate_percent_decimals: int
     default_annual_rate: Percent
+    max_legal_annual_rate: Percent
     late_monthly_rate_percent: Percent
     overdue_installments_to_block: int

@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
+from app.core.enums import UserStatus
 from app.core.errors import AuthError
 from app.core.security import decode_access_token
 from app.database import get_session
@@ -28,7 +29,7 @@ def get_current_user(
     if subject is None:
         raise AuthError("SESSION_EXPIRED", "Tu sesion expiro. Vuelve a iniciar sesion.")
     user = users_repo.get_by_id(session, int(subject))
-    if user is None:
+    if user is None or user.status is not UserStatus.active:
         raise AuthError("SESSION_EXPIRED", "Tu sesion expiro. Vuelve a iniciar sesion.")
     return user
 

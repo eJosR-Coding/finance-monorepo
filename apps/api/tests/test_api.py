@@ -3,11 +3,11 @@
 Test names stay in Spanish - the pytest run is academic evidence (Anexo F).
 """
 
-from datetime import date, timedelta
+from datetime import timedelta
 
 from fastapi.testclient import TestClient
 
-from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
+from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD, TODAY
 
 START = "2026-09-12"
 
@@ -310,7 +310,7 @@ def test_historial_de_pagos_del_credito(auth_client: TestClient, client_id: int)
 
 def _overdue_credit(auth_client: TestClient, client_id: int) -> dict:
     """Grant a credit whose installments are already past due today."""
-    start = (date.today() - timedelta(days=20)).isoformat()
+    start = (TODAY - timedelta(days=20)).isoformat()
     return auth_client.post("/api/credits", json=_terms(client_id, start_date=start)).json()
 
 
@@ -379,7 +379,7 @@ def test_no_se_puede_habilitar_a_mano_a_un_cliente_con_deuda_vencida(
 
 
 def test_dashboard_resume_el_negocio(auth_client: TestClient, client_id: int) -> None:
-    auth_client.post("/api/credits", json=_terms(client_id, start_date=date.today().isoformat()))
+    auth_client.post("/api/credits", json=_terms(client_id, start_date=TODAY.isoformat()))
 
     body = auth_client.get("/api/dashboard").json()
     assert body["active_credits"] == 1
@@ -403,7 +403,7 @@ def test_detalle_del_cliente_trae_creditos_pagos_e_historial(
     auth_client: TestClient, client_id: int
 ) -> None:
     credit = auth_client.post(
-        "/api/credits", json=_terms(client_id, start_date=date.today().isoformat())
+        "/api/credits", json=_terms(client_id, start_date=TODAY.isoformat())
     ).json()
     auth_client.post(
         f"/api/credits/{credit['id']}/payments", json={"amount_received": "70.69"}

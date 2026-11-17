@@ -1,5 +1,6 @@
 """Database engine, sessions and the declarative Base."""
 
+import sqlite3
 from collections.abc import Generator
 
 from sqlalchemy import Engine, create_engine, event
@@ -14,7 +15,10 @@ class Base(DeclarativeBase):
 
 engine = create_engine(
     settings.database_url,
-    connect_args={"check_same_thread": False},  # FastAPI hops across threads
+    # SQLite: FastAPI hops across threads. Postgres needs nothing extra.
+    connect_args={"check_same_thread": False} if settings.is_sqlite else {},
+    # Neon closes idle connections; check before reuse instead of failing a request.
+    pool_pre_ping=not settings.is_sqlite,
     echo=False,
 )
 
@@ -22,6 +26,8 @@ engine = create_engine(
 @event.listens_for(Engine, "connect")
 def _enable_sqlite_foreign_keys(dbapi_connection, connection_record) -> None:  # noqa: ANN001
     """SQLite ignores foreign keys unless you turn them on per connection."""
+    if not isinstance(dbapi_connection, sqlite3.Connection):
+        return  # Postgres enforces them always
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()

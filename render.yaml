@@ -1,0 +1,24 @@
+# Render Blueprint: New > Blueprint > pick this repo. The database lives in Neon.
+services:
+  - type: web
+    name: prestameami
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Neon connection string (postgresql://...?sslmode=require). Asked on creation.
+      - key: PRESTAMEAMI_DATABASE_URL
+        sync: false
+      # Password for admin@prestameami.pe on the first boot. Asked on creation.
+      - key: PRESTAMEAMI_ADMIN_PASSWORD
+        sync: false
+      # Signs the session tokens. Render generates a random one.
+      - key: PRESTAMEAMI_SECRET_KEY
+        generateValue: true
+      # Load the demo clients and credits the first time (empty database only).
+      - key: PRESTAMEAMI_SEED_DEMO_DATA
+        value: "true"
+      - key: TZ
+        value: America/Lima
