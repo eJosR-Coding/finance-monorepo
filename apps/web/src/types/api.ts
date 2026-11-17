@@ -21,6 +21,8 @@ export interface User {
   id: number
   name: string
   email: string
+  role: 'admin'
+  status: 'active' | 'inactive'
   created_at: string
 }
 
@@ -37,8 +39,8 @@ export interface Client {
   last_name: string
   full_name: string
   initials: string
-  phone: string
-  address: string
+  phone: string | null
+  address: string | null
   credit_status: ClientCreditStatus
   created_at: string
   updated_at: string
@@ -75,8 +77,8 @@ export interface ClientPayload {
   dni: string
   first_name: string
   last_name: string
-  phone: string
-  address: string
+  phone: string | null
+  address: string | null
 }
 
 export interface CreditTerms {
@@ -281,6 +283,8 @@ export interface RecentCredit {
 
 export interface Dashboard {
   active_credits: number
+  overdue_credits: number
+  active_clients: number
   outstanding_total: string
   collected_today: string
   payments_today: number
@@ -324,6 +328,7 @@ export interface AppConfig {
   money_decimals: number
   rate_percent_decimals: number
   default_annual_rate: string
+  max_legal_annual_rate: string
   late_monthly_rate_percent: string
   overdue_installments_to_block: number
 }

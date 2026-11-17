@@ -20,6 +20,13 @@ Proyecto academico del curso de **Finanzas e Ingenieria Economica**.
 | Precision de tasas | 7 decimales en porcentaje (9 en la fraccion) |
 | Precision de importes | 2 decimales |
 | Tasa moratoria | 2 % mensual, prorrateada por dias de atraso |
+| Tasa maxima legal (BCRP) | 114.13 % TEA, configurable con `PRESTAMEAMI_MAX_LEGAL_ANNUAL_RATE` |
+
+La tasa maxima legal es la del BCRP para operaciones entre personas ajenas al
+sistema financiero en moneda nacional (vigente del 01/05/2026 al 31/10/2026).
+El BCRP la actualiza cada seis meses: no esta fija en el codigo, se cambia en
+la configuracion. Una TNA se compara por su TEA equivalente,
+`(1 + TNA/m)^m - 1` con `m = 360 / frecuencia`.
 
 Un cliente con una obligacion vencida queda **bloqueado** y no puede recibir un
 nuevo credito hasta regularizar su deuda. El bloqueo se revierte solo cuando
@@ -78,6 +85,15 @@ contrasenia: admin123
 
 La contrasenia se guarda con hash bcrypt, nunca en texto plano.
 
+**¿Olvidaste la contrasenia?** La app corre en local y no envia correos, asi que
+se restablece desde la terminal (el enlace del login muestra estas mismas
+instrucciones):
+
+```bash
+cd apps/api
+uv run python scripts/reset_password.py admin@prestameami.pe NuevaClave123
+```
+
 ---
 
 ## Comandos utiles
@@ -89,6 +105,7 @@ La contrasenia se guarda con hash bcrypt, nunca en texto plano.
 | `uv run fastapi dev app/main.py` | Levanta la API con recarga automatica. |
 | `uv run python scripts/seed.py` | **Reinicia** la base y carga los datos de demo. |
 | `uv run python scripts/reset_db.py` | Deja la base vacia, sin datos. |
+| `uv run python scripts/reset_password.py <correo> <clave>` | Restablece la contrasenia del administrador. |
 | `uv run pytest` | Ejecuta toda la bateria de tests. |
 | `uv run pytest -v` | Igual, mostrando el nombre de cada test. |
 | `uv run pytest -k caso-1` | Solo el caso de prueba 1 del anexo. |
@@ -99,6 +116,9 @@ La contrasenia se guarda con hash bcrypt, nunca en texto plano.
 La base de datos vive en `apps/api/data/prestameami.db` y no se versiona: se
 regenera con el seed. La primera vez que arranca la API, si el archivo no
 existe, se crean las tablas vacias.
+
+> Si tenias una base creada con una version anterior, vuelve a correr el seed:
+> el esquema agrego columnas (rol y estado del usuario) y restricciones.
 
 ### Frontend (`apps/web`)
 
@@ -243,11 +263,18 @@ honesto que un proceso programado.
 **Los pagos se reparten en un orden fijo:** interes moratorio, interes
 compensatorio y capital. La API devuelve cuanto fue a cada componente.
 
+**La base tambien defiende las reglas (informe 8.7).** Ademas de la validacion
+del servicio hay `CHECK` de monto (0 < monto <= 200), plazo (1 a 14 dias),
+cuotas, frecuencia e imputacion exacta del pago (mora + interes + capital =
+monto recibido), y las claves foraneas son `ON DELETE RESTRICT`: no se puede
+borrar un cliente con creditos ni un credito con cuotas o pagos.
+
 **Diferencias deliberadas respecto a los wireframes.** El ERD academico es la
 fuente de verdad, asi que:
 
 - El formulario de nuevo cliente no pide fecha de nacimiento, correo ni notas:
-  no hay columnas para eso en `CLIENT`.
+  no hay columnas para eso en `CLIENT`. Telefono (9 digitos) y direccion son
+  opcionales, como en el informe.
 - La pantalla de Configuracion es de solo lectura: no existe tabla de
   configuracion y crearla dejaria la documentacion peleada con la base.
 - La tasa moratoria se muestra pero no se edita por credito: es un parametro del

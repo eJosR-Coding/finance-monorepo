@@ -190,7 +190,12 @@ export function RegisterPaymentPage() {
         <div>
           <p className="sectitle">{t('payment.section')}</p>
 
-          <Field label={t('payment.date')} htmlFor="date" className="mb-4">
+          <Field
+            label={t('payment.date')}
+            htmlFor="date"
+            tip={t('payment.dateTip')}
+            className="mb-4"
+          >
             <input
               id="date"
               type="date"
@@ -200,7 +205,12 @@ export function RegisterPaymentPage() {
             />
           </Field>
 
-          <Field label={t('payment.amount')} htmlFor="amount" className="mb-4">
+          <Field
+            label={t('payment.amount')}
+            htmlFor="amount"
+            tip={t('payment.amountTip')}
+            className="mb-4"
+          >
             <input
               id="amount"
               className="input"

@@ -1,6 +1,7 @@
 /** Spanish catalog. This is the default language of the product. */
 export const es = {
   common: {
+    close: 'Cerrar',
     appName: 'Prestameami',
     appSuffix: '.pe',
     cancel: 'Cancelar',
@@ -46,6 +47,10 @@ export const es = {
     password: 'Contrasenia',
     remember: 'Recordarme',
     forgot: '¿Olvidaste tu contrasenia?',
+    forgotTitle: 'Recuperar acceso',
+    forgotBody:
+      'Prestameami.pe funciona en local y no envia correos. Para definir una nueva contrasenia, ejecuta en la carpeta apps/api:',
+    forgotNote: 'La nueva contrasenia se guarda con hash bcrypt y la cuenta queda activa.',
     submit: 'Ingresar',
     submitting: 'Ingresando...',
     footer: 'Acceso exclusivo para administradores de la bodega.',
@@ -65,6 +70,10 @@ export const es = {
     collectedTodayMeta: '{{count}} pagos registrados',
     blockedClients: 'Clientes bloqueados',
     blockedClientsMeta: 'Por deuda vencida',
+    activeClients: 'Clientes activos',
+    activeClientsMeta: 'Con al menos un credito abierto',
+    overdueCredits: 'Creditos vencidos',
+    overdueCreditsMeta: 'Con alguna cuota impaga vencida',
     upcoming: 'Proximos cobros',
     viewAll: 'Ver todos',
     recentCredits: 'Ultimos creditos',
@@ -129,6 +138,9 @@ export const es = {
     phonePlaceholder: '987 654 321',
     address: 'Direccion',
     addressPlaceholder: 'Av., calle, referencia',
+    optional: '(opcional)',
+    phoneTip: 'Celular de 9 digitos para coordinar los cobros. Es opcional.',
+    dniTip: 'Documento Nacional de Identidad de 8 digitos. No puede repetirse entre clientes.',
     submit: 'Registrar cliente',
     submitting: 'Registrando...',
     success: 'Cliente registrado correctamente.',
@@ -180,6 +192,17 @@ export const es = {
     rateType: 'Tipo de tasa',
     rateTypeTip:
       'TEA es la Tasa Efectiva Anual. El sistema calcula automaticamente su equivalente para cada periodo con base 360.',
+    teaTip:
+      'Tasa Efectiva Anual. El sistema la convierte automaticamente a la tasa correspondiente al periodo del credito.',
+    tnaTip:
+      'Tasa Nominal Anual. Capitaliza una vez por periodo de pago: se divide entre m = 360 / frecuencia y su TEA equivalente es (1 + TNA/m)^m - 1.',
+    legalMax: 'Tasa maxima legal (BCRP): {{rate}} % TEA',
+    amountTip: 'Capital que se entrega al cliente. Debe ser mayor a 0 y no superar {{amount}}.',
+    startDateTip: 'Dia en que el cliente recibe el fiado. Desde aqui se cuentan los dias de cada cuota.',
+    termTip: 'Duracion maxima permitida para este credito. Prestameami.pe admite hasta {{days}} dias.',
+    installmentsTip: 'Cantidad de pagos iguales (metodo frances) en que se devolvera el credito.',
+    frequencyTip: 'Dias entre una cuota y la siguiente. Cuotas x frecuencia (+ gracia) no puede superar el plazo.',
+    installmentTip: 'Pago periodico compuesto por interes y amortizacion del capital.',
     rate: 'Tasa',
     sectionGrace: 'Periodo de gracia',
     graceNone: 'Sin gracia',
@@ -279,6 +302,8 @@ export const es = {
     methodTransfer: 'Transferencia',
     notes: 'Observaciones (opcional)',
     notesPlaceholder: 'Ej. Cliente pago en la tienda a las 3pm',
+    dateTip: 'Dia en que el cliente entrega el dinero. Si es posterior al vencimiento se calcula mora por los dias de atraso.',
+    amountTip: 'Importe recibido. Se aplica primero a la mora, luego al interes compensatorio y al final al capital.',
     allocation: 'Aplicacion del pago',
     dueAmount: 'Saldo exigible',
     lateInterest: 'Interes moratorio',
@@ -371,6 +396,8 @@ export const es = {
     rates: 'Tasas y convenciones',
     defaultRate: 'TEA sugerida',
     lateRate: 'Tasa moratoria',
+    legalMaxRate: 'Tasa maxima legal (BCRP)',
+    legalMaxRateNote: 'Tope de la TEA pactada. Se actualiza cada seis meses en el backend (PRESTAMEAMI_MAX_LEGAL_ANNUAL_RATE).',
     daysPerYear: 'Anio financiero',
     ratePrecision: 'Decimales de tasa',
     moneyPrecision: 'Decimales de importe',
@@ -438,6 +465,9 @@ export const es = {
     DUPLICATE_PAYMENT: 'Ya registraste un pago identico hace {{seconds_ago}} segundos.',
     DUPLICATE_CREDIT: 'Acabas de otorgar un credito identico ({{credit_code}}) hace {{seconds_ago}} segundos.',
     PAYMENT_EXCEEDS_DEBT: 'El monto excede la deuda pendiente. El maximo a cobrar es S/ {{max_amount}}.',
+    RATE_ABOVE_LEGAL_MAX:
+      'La tasa equivale a una TEA de {{effective_annual_rate}} % y supera la tasa maxima legal vigente del BCRP ({{max_legal_annual_rate}} % anual).',
+    USER_INACTIVE: 'Esta cuenta esta desactivada.',
   },
   duplicate: {
     title: '¿Registrarlo de todas formas?',
@@ -448,6 +478,7 @@ export const es = {
     dniLength: 'El DNI debe tener 8 digitos.',
     dniDigits: 'El DNI solo puede contener numeros.',
     phoneShort: 'Ingresa un telefono valido.',
+    phoneDigits: 'El telefono debe tener 9 digitos.',
     amountPositive: 'Ingresa un monto mayor a 0.',
     amountMax: 'El monto maximo permitido es {{amount}}.',
     termRange: 'El plazo debe estar entre 1 y {{max}} dias.',

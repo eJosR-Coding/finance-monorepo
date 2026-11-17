@@ -127,7 +127,7 @@ export function ClientsPage() {
                     </span>
                   </td>
                   <td>{client.dni}</td>
-                  <td>{client.phone}</td>
+                  <td>{client.phone ?? '—'}</td>
                   <td>{t('clients.creditCount', { count: client.active_credits })}</td>
                   <td className="num">{formatMoney(client.outstanding_balance)}</td>
                   <td>

@@ -85,6 +85,7 @@ export function NewCreditPage() {
 
   const maxAmount = config?.max_credit_amount ?? '200.00'
   const maxTerm = config?.max_term_days ?? 14
+  const maxLegalRate = config?.max_legal_annual_rate ?? '114.13'
   const lateRate = simulation?.late_monthly_rate_percent ?? config?.late_monthly_rate_percent ?? '2.00'
   const blocked = client?.credit_status === 'blocked'
 
@@ -228,6 +229,7 @@ export function NewCreditPage() {
             <Field
               label={t('newCredit.amount')}
               htmlFor="amount"
+              tip={t('newCredit.amountTip', { amount: formatMoney(maxAmount) })}
               error={errors.amount}
               hint={t('newCredit.maxAmount', { amount: formatMoney(maxAmount) })}
             >
@@ -239,7 +241,11 @@ export function NewCreditPage() {
                 onChange={(event) => set('amount', event.target.value)}
               />
             </Field>
-            <Field label={t('newCredit.startDate')} htmlFor="startDate">
+            <Field
+              label={t('newCredit.startDate')}
+              htmlFor="startDate"
+              tip={t('newCredit.startDateTip')}
+            >
               <input
                 id="startDate"
                 type="date"
@@ -256,6 +262,7 @@ export function NewCreditPage() {
             <Field
               label={t('newCredit.term')}
               htmlFor="termDays"
+              tip={t('newCredit.termTip', { days: maxTerm })}
               error={errors.termDays}
               hint={t('newCredit.maxTerm', { days: maxTerm })}
             >
@@ -270,6 +277,7 @@ export function NewCreditPage() {
             <Field
               label={t('newCredit.installments')}
               htmlFor="installments"
+              tip={t('newCredit.installmentsTip')}
               error={errors.installments}
             >
               <input
@@ -283,6 +291,7 @@ export function NewCreditPage() {
             <Field
               label={t('newCredit.frequency')}
               htmlFor="frequency"
+              tip={t('newCredit.frequencyTip')}
               error={errors.frequency}
               hint={t('newCredit.frequencySuffix', { days: form.frequency })}
             >
@@ -310,7 +319,13 @@ export function NewCreditPage() {
                 <option value="TNA">TNA</option>
               </select>
             </Field>
-            <Field label={`${t('newCredit.rate')} (%)`} htmlFor="annualRate" error={errors.annualRate}>
+            <Field
+              label={`${t('newCredit.rate')} (%)`}
+              htmlFor="annualRate"
+              error={errors.annualRate}
+              tip={form.rateType === 'TEA' ? t('newCredit.teaTip') : t('newCredit.tnaTip')}
+              hint={t('newCredit.legalMax', { rate: maxLegalRate })}
+            >
               <input
                 id="annualRate"
                 className={errors.annualRate ? 'input input-invalid' : 'input'}
@@ -420,6 +435,7 @@ export function NewCreditPage() {
                 <Row
                   label={t('newCredit.estimatedInstallment')}
                   value={formatMoney(simulation.installment_amount)}
+                  tip={t('newCredit.installmentTip')}
                   emphasis
                 />
                 <Row

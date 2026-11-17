@@ -3,6 +3,7 @@ import type { Catalog } from '@/lib/locales/es'
 
 export const en: Catalog = {
   common: {
+    close: 'Close',
     appName: 'Prestameami',
     appSuffix: '.pe',
     cancel: 'Cancel',
@@ -48,6 +49,10 @@ export const en: Catalog = {
     password: 'Password',
     remember: 'Remember me',
     forgot: 'Forgot your password?',
+    forgotTitle: 'Recover access',
+    forgotBody:
+      'Prestameami.pe runs locally and sends no email. To set a new password, run this in the apps/api folder:',
+    forgotNote: 'The new password is stored as a bcrypt hash and the account is reactivated.',
     submit: 'Sign in',
     submitting: 'Signing in...',
     footer: 'Restricted to store administrators.',
@@ -67,6 +72,10 @@ export const en: Catalog = {
     collectedTodayMeta: '{{count}} payments recorded',
     blockedClients: 'Blocked clients',
     blockedClientsMeta: 'Due to overdue debt',
+    activeClients: 'Active clients',
+    activeClientsMeta: 'With at least one open credit',
+    overdueCredits: 'Overdue credits',
+    overdueCreditsMeta: 'With an unpaid installment past due',
     upcoming: 'Upcoming collections',
     viewAll: 'View all',
     recentCredits: 'Latest credits',
@@ -131,6 +140,9 @@ export const en: Catalog = {
     phonePlaceholder: '987 654 321',
     address: 'Address',
     addressPlaceholder: 'Street, number, landmark',
+    optional: '(optional)',
+    phoneTip: '9-digit mobile number to arrange collections. Optional.',
+    dniTip: '8-digit national ID. It cannot repeat between clients.',
     submit: 'Register client',
     submitting: 'Registering...',
     success: 'Client registered successfully.',
@@ -181,6 +193,17 @@ export const en: Catalog = {
     rateType: 'Rate type',
     rateTypeTip:
       'TEA is the effective annual rate. The system converts it to the equivalent periodic rate on a 360-day basis.',
+    teaTip:
+      'Effective Annual Rate. The system converts it automatically to the rate of the credit period.',
+    tnaTip:
+      'Nominal Annual Rate. It compounds once per payment period: divided by m = 360 / frequency, its effective equivalent is (1 + TNA/m)^m - 1.',
+    legalMax: 'Legal maximum rate (BCRP): {{rate}} % effective',
+    amountTip: 'Principal handed to the client. Must be above 0 and at most {{amount}}.',
+    startDateTip: 'Day the client receives the credit. Installment days are counted from here.',
+    termTip: 'Maximum duration allowed for this credit. Prestameami.pe allows up to {{days}} days.',
+    installmentsTip: 'Number of equal payments (French method) used to repay the credit.',
+    frequencyTip: 'Days between installments. Installments x frequency (+ grace) cannot exceed the term.',
+    installmentTip: 'Periodic payment made of interest plus principal amortization.',
     rate: 'Rate',
     sectionGrace: 'Grace period',
     graceNone: 'No grace',
@@ -279,6 +302,8 @@ export const en: Catalog = {
     methodTransfer: 'Bank transfer',
     notes: 'Notes (optional)',
     notesPlaceholder: 'e.g. Client paid at the store at 3pm',
+    dateTip: 'Day the client hands over the money. If it is after the due date, late interest accrues for the days late.',
+    amountTip: 'Amount received. It goes first to late interest, then compensatory interest, then principal.',
     allocation: 'Payment allocation',
     dueAmount: 'Amount due',
     lateInterest: 'Late interest',
@@ -371,6 +396,8 @@ export const en: Catalog = {
     rates: 'Rates and conventions',
     defaultRate: 'Suggested TEA',
     lateRate: 'Late interest rate',
+    legalMaxRate: 'Legal maximum rate (BCRP)',
+    legalMaxRateNote: 'Cap on the agreed effective rate. Updated every six months in the backend (PRESTAMEAMI_MAX_LEGAL_ANNUAL_RATE).',
     daysPerYear: 'Financial year',
     ratePrecision: 'Rate decimals',
     moneyPrecision: 'Amount decimals',
@@ -437,6 +464,9 @@ export const en: Catalog = {
     DUPLICATE_CREDIT: 'You just granted an identical credit ({{credit_code}}) {{seconds_ago}} seconds ago.',
     PAYMENT_EXCEEDS_DEBT:
       'The amount exceeds the outstanding debt. The most you can collect is S/ {{max_amount}}.',
+    RATE_ABOVE_LEGAL_MAX:
+      'The rate equals an effective annual rate of {{effective_annual_rate}} % and exceeds the BCRP legal maximum ({{max_legal_annual_rate}} % a year).',
+    USER_INACTIVE: 'This account is disabled.',
   },
   duplicate: {
     title: 'Record it anyway?',
@@ -447,6 +477,7 @@ export const en: Catalog = {
     dniLength: 'The ID number must have 8 digits.',
     dniDigits: 'The ID number can only contain digits.',
     phoneShort: 'Enter a valid phone number.',
+    phoneDigits: 'The phone must have 9 digits.',
     amountPositive: 'Enter an amount greater than 0.',
     amountMax: 'The maximum amount allowed is {{amount}}.',
     termRange: 'The term must be between 1 and {{max}} days.',

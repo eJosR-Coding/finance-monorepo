@@ -59,6 +59,11 @@ export function SettingsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
         <ReadOnly label={t('settings.defaultRate')} value={`${config.default_annual_rate} %`} />
         <ReadOnly
+          label={t('settings.legalMaxRate')}
+          value={`${config.max_legal_annual_rate} % TEA`}
+          note={t('settings.legalMaxRateNote')}
+        />
+        <ReadOnly
           label={t('settings.lateRate')}
           value={`${config.late_monthly_rate_percent} % / 30 ${t('common.days')}`}
         />
@@ -94,11 +99,12 @@ export function SettingsPage() {
   )
 }
 
-function ReadOnly({ label, value }: { label: string; value: string }) {
+function ReadOnly({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="field">
       <label>{label}</label>
       <input className="input" value={value} readOnly disabled />
+      {note !== undefined && <p className="field-hint">{note}</p>}
     </div>
   )
 }
