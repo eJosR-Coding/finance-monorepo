@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.core import clock
 from app.core.security import hash_password
 from app.database import Base, get_session
 from app.main import app
@@ -18,6 +19,19 @@ ADMIN_EMAIL = "admin@prestameami.pe"
 ADMIN_PASSWORD = "admin123"
 
 TODAY = date(2026, 9, 12)
+
+
+@pytest.fixture(autouse=True)
+def frozen_today(monkeypatch: pytest.MonkeyPatch) -> date:
+    """Pin the business date the services read, so the suite never rots.
+
+    The fixtures build credits starting on TODAY. Without this, once the real
+    calendar passes their due dates every one of them turns overdue and the
+    assertions about 'active' / 'pending' fail for reasons unrelated to the code.
+    Only `today` is pinned: `now` stays real so the resubmit window still works.
+    """
+    monkeypatch.setattr(clock, "today", lambda: TODAY)
+    return TODAY
 
 
 @pytest.fixture

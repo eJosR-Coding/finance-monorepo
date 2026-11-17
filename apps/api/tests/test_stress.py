@@ -16,6 +16,7 @@ from fastapi.testclient import TestClient
 from app.core.enums import RateType
 from app.core.errors import BusinessRuleError
 from app.services import finance
+from tests.conftest import TODAY
 
 START = date(2026, 9, 12)
 
@@ -332,7 +333,7 @@ def test_no_se_puede_pagar_un_credito_ya_cancelado(
 
 
 def _overdue_credit(auth_client: TestClient, client_id: int, days_ago: int) -> dict:
-    start = (date.today() - timedelta(days=days_ago)).isoformat()
+    start = (TODAY - timedelta(days=days_ago)).isoformat()
     return _credit(auth_client, client_id, start_date=start)
 
 
@@ -343,7 +344,7 @@ def test_pagar_el_mismo_dia_del_vencimiento_no_genera_mora(
     credit = _overdue_credit(auth_client, client_id, days_ago=7)
     detail = auth_client.get(f"/api/credits/{credit['id']}").json()
     first = detail["installments"][0]
-    assert first["due_date"] == date.today().isoformat()
+    assert first["due_date"] == TODAY.isoformat()
     assert first["days_late"] == 0
 
     preview = auth_client.post(
@@ -426,7 +427,7 @@ def test_la_cuota_recorre_pendiente_vencida_y_pagada(
     auth_client: TestClient, client_id: int
 ) -> None:
     # Pendiente: vence en el futuro.
-    future = _credit(auth_client, client_id, start_date=date.today().isoformat())
+    future = _credit(auth_client, client_id, start_date=TODAY.isoformat())
     assert auth_client.get(f"/api/credits/{future['id']}").json()["installments"][0][
         "status"
     ] == "pending"
